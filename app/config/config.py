@@ -4,7 +4,6 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-
-REDIS_HOST = getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(getenv("REDIS_PORT", "6379"))
-REDIS_DB = int(getenv("REDIS_DB", "0"))
+VALKEY_HOST = getenv("VALKEY_HOST", "localhost")
+VALKEY_PORT = int(getenv("VALKEY_PORT", "6379"))
+VALKEY_DB = int(getenv("VALKEY_DB", "0"))

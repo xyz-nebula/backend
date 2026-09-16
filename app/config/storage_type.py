@@ -8,17 +8,18 @@ class StorageTypes(str, Enum):
     An enumeration of supported storage types for session management.
 
     Attributes:
-        REDIS (str): Utilizes a Redis database to store session data, suitable for distributed systems.
+        VALKEY (str): Utilizes a valkey database to store session data, suitable for distributed systems.
         MEMORY (str): Utilizes an in-memory dictionary to store session data, suitable for single-instance applications.
     """
 
-    REDIS = "redis"
+    VALKEY = "valkey"
     MEMORY = "memory"
 
     @classmethod
     def values(cls) -> list[str]:
         """
         Returns a list of storage type values.
+        
 
         This class method retrieves the string values associated with each
         storage type in the enumeration. This can be useful for validation
