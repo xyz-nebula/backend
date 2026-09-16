@@ -2,8 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config.storage_type import StorageTypes
-from app.config.config import REDIS_HOST, REDIS_PORT, REDIS_DB
-
+from app.config.config import settings
 
 class StorageConfig(BaseModel):
     """
@@ -29,91 +28,91 @@ class StorageConfig(BaseModel):
     )
 
 
-class RedisConfig(StorageConfig):
+class ValkeyConfig(StorageConfig):
     """
-    Configuration class for Redis storage settings.
+    Configuration class for Valkey storage settings.
 
-    This class extends `StorageConfig` to provide configuration specific to Redis storage.
+    This class extends `StorageConfig` to provide configuration specific to Valkey storage.
     It allows for setting up connection details such as host, port, database, and password.
-    Additionally, it includes a method to construct the Redis URL based on the provided configuration.
+    Additionally, it includes a method to construct the Valkey URL based on the provided configuration.
 
     Attributes:
-        storage_type (StorageTypes): The type of storage to use. Defaults to `StorageTypes.REDIS`.
-        host (str): The hostname of the Redis server. Defaults to "localhost".
-        port (int): The port number on which the Redis server is listening. Defaults to 6379.
-        db (int): The Redis database index to use. Defaults to 0.
-        password (Optional[str]): The password for the Redis server, if any. Defaults to None.
-        url (Optional[str]): A custom Redis URL, if provided. Defaults to None.
+        storage_type (StorageTypes): The type of storage to use. Defaults to `StorageTypes.valkey`.
+        host (str): The hostname of the Valkey server. Defaults to "localhost".
+        port (int): The port number on which the Valkey server is listening. Defaults to 6379.
+        db (int): The Valkey database index to use. Defaults to 0.
+        password (Optional[str]): The password for the Valkey server, if any. Defaults to None.
+        url (Optional[str]): A custom Valkey URL, if provided. Defaults to None.
     """
 
-    storage_type: StorageTypes = Field(default=StorageTypes.REDIS)
-    host: str = Field(default_factory=REDIS_HOST)
-    port: int = Field(default_factory=REDIS_PORT)
-    db: int = Field(default_factory=REDIS_DB)
-    # password: Optional[str] = Field(default_factory=lambda: config("REDIS_PASSWORD", default=None))
+    storage_type: StorageTypes = Field(default=StorageTypes.valkey)
+    host: str = Field(default_factory=settings.valkey_host)
+    port: int = Field(default_factory=settings.valkey_port)
+    db: int = Field(default_factory=settings.valkey_db)
+    # password: Optional[str] = Field(default_factory=lambda: config("valkey_PASSWORD", default=None))
     url: Optional[str] = Field(default=None)
 
     def __repr__(self) -> str:
         """
-        Return a string representation of the Redis configuration object.
+        Return a string representation of the Valkey configuration object.
 
         The representation includes all configuration attributes except the `url`,
         which is dynamically generated based on other attributes using the `get_url` method.
 
         Returns:
-            str: The representation of the Redis configuration.
+            str: The representation of the Valkey configuration.
 
         Examples:
-            >>> config = RedisConfig(host="redis-server", port=6380, db=1)
+            >>> config = ValkeyConfig(host="valkey-server", port=6380, db=1)
             >>> repr(config)
-            'RedisConfig(storage_type=redis, host=redis-server, port=6380, db=1, url=redis://redis-server:6380/1)'
+            'ValkeyConfig(storage_type=valkey, host=valkey-server, port=6380, db=1, url=valkey://valkey-server:6380/1)'
         """
         attributes = self.model_dump(exclude={"url"}, exclude_none=True)
         attributes["url"] = self.get_url()
         attributes["storage_type"] = self.storage_type.value
         attributes_str = ", ".join([f"{k}={v}" for k, v in attributes.items()])
-        return f"RedisConfig({attributes_str})"
+        return f"ValkeyConfig({attributes_str})"
 
     def __str__(self) -> str:
         """
-        Return a string representation of the Redis configuration object.
+        Return a string representation of the Valkey configuration object.
 
         This method calls `__repr__` to provide a consistent string representation.
 
         Returns:
-            str: The representation of the Redis configuration.
+            str: The representation of the Valkey configuration.
 
         Examples:
-            >>> config = RedisConfig(host="redis-server", port=6380, db=1)
+            >>> config = ValkeyConfig(host="valkey-server", port=6380, db=1)
             >>> str(config)
-            'RedisConfig(storage_type=redis, host=redis-server, port=6380, db=1, url=redis://redis-server:6380/1)'
+            'ValkeyConfig(storage_type=valkey, host=redis-server, port=6380, db=1, url=redis://redis-server:6380/1)'
         """
         return self.__repr__()
 
     def get_url(self) -> str:
         """
-        Construct the Redis URL based on the configuration attributes.
+        Construct the Valkey URL based on the configuration attributes.
 
         If a custom `url` is provided, it is returned as is. Otherwise, a URL is
         constructed using the `host`, `port`, `db`, and optionally `password` attributes.
 
         Returns:
-            str: The constructed Redis URL.
+            str: The constructed Valkey URL.
 
         Examples:
-            >>> config = RedisConfig(host="redis-server", port=6380, db=1, password="secret")
+            >>> config = ValkeyConfig(host="valkey-server", port=6380, db=1, password="secret")
             >>> config.get_url()
-            'redis://:secret@redis-server:6380/1'
+            'valkey://:secret@redis-server:6380/1'
 
-            >>> config_no_pass = RedisConfig(host="redis-server", port=6380, db=1)
+            >>> config_no_pass = ValkeyConfig(host="valkey-server", port=6380, db=1)
             >>> config_no_pass.get_url()
-            'redis://redis-server:6380/1'
+            'valkey://redis-server:6380/1'
         """
         if self.url:
             return self.url
         if self.password:
-            return f"redis://:{self.password}@{self.host}:{self.port}/{self.db}"
-        return f"redis://{self.host}:{self.port}/{self.db}"
+            return f"valkey://:{self.password}@{self.host}:{self.port}/{self.db}"
+        return f"valkey://{self.host}:{self.port}/{self.db}"
 
 
-__all__ = ["StorageConfig", "RedisConfig"]
+__all__ = ["StorageConfig", "ValkeyConfig"]
