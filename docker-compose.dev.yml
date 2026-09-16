@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.env
+    container_name: nebula-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=development
