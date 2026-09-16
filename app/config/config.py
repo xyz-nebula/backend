@@ -1,10 +1,16 @@
-from os import getenv
-from typing import Optional
-
-from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-REDIS_HOST = getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(getenv("REDIS_PORT", "6379"))
-REDIS_DB = int(getenv("REDIS_DB", "0"))
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60
+    
+    valkey_host: str = "localhost"
+    valkey_port: int = 6379
+    valkey_db: int = 0
+
+
+settings = Settings()

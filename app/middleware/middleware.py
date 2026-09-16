@@ -1,12 +1,9 @@
-import logging
-import time
-import jwt
-
-
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
+
+from app.services.JWTService import get_jwt_service
 
 
 class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
@@ -14,7 +11,8 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
     Middleware for jwt authenticationMiddleware
     """
     def __init__(self, app: ASGIApp):
-        self.app = app
+        super().__init__(app)
+        self.jwt_service = get_jwt_service()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] not in ("http", "websocket"):
@@ -34,17 +32,14 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
             return
 
         try:
-            payload = jwt.decode(token, options={"verify_signature": False})
-        except jwt.ExpiredSignatureError:
-            await self._reject(scope, receive, send, "Token has expired")
-            return
-        except jwt.InvalidTokenError:
-            await self._reject(scope, receive, send, "Invalid token")
+            payload = self.jwt_service.decode(token)
+        except ValueError as exc:
+            await self._reject(scope, receive, send, str(exc))
             return
 
         # Stash the decoded payload so route handlers can read it
         scope["state"] = scope.get("state", {})
-        scope["state"]["user"] = payload
+        scope["state"]["user"] = payload.model_dump()
 
         await self.app(scope, receive, send)
 
