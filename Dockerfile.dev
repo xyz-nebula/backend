@@ -3,10 +3,10 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 COPY . /app
 
-ENV UV_NO_DEV=1
+ENV UV_NO_DEV=0
 
 WORKDIR /app
 
-RUN uv sync --locked
+RUN uv sync --dev --locked
 
-CMD ["uv", "run", "app"]
+CMD ["uv", "run", "--dev", "app"]
