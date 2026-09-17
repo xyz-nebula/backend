@@ -26,7 +26,7 @@ app = FastAPI(
 register_tortoise(
     app,
     db_url=settings.db_url,
-    modules={"models": ["nl_models.models"]},
+    modules={"models": ["app.database.models"]},
     generate_schemas=True,
     add_exception_handlers=True,
 )

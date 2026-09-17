@@ -1,12 +1,28 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile.env
+    image: ghcr.io/astral-sh/uv:alpine
     container_name: nebula-backend
     ports:
       - "3000:3000"
     volumes:
       - .:/app
+      - app_venv:/app/.venv
     environment:
-      - ENV=development
+      - DEBUG=true
+      - VALKEY_HOST=valkey
+    command: "sh -c 'cd /app && uv run --dev -m app'"
+    depends_on:
+      valkey:
+        condition: service_healthy
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: nebula-valkey
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+
+volumes:
+  app_venv:

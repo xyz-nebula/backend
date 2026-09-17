@@ -1,8 +1,8 @@
-run-dev: 
+run-dev:
     uv run app
+
+run-docker:
+    docker compose -f docker-compose.dev.yml up
 
 build-docker:
     docker build -t nebula-backend .
-
-run-docker: build-docker
-    docker compose -f docker-compose.dev.yml up

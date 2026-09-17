@@ -14,6 +14,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.app:app",
         host="0.0.0.0",
+        port=settings.port,
         log_level="debug" if settings.debug else "info",
         access_log=settings.debug,
         reload=settings.debug,
