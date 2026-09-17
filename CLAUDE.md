@@ -30,13 +30,11 @@ FastAPI backend for the Nebula project. Python 3.14+, managed with `uv`.
 ## Running
 
 ```bash
-# Local dev (no Docker)
+# Docker dev stack (app + valkey + postgres)
 just run-dev
-# or directly:
-uv run app
 
-# Docker dev build + run
-just run-docker
+# Reset the dev Postgres database (drops the postgres container + volume)
+just reset-db
 
 # Docker production build only
 just build-docker
