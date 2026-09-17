@@ -10,9 +10,12 @@ services:
     environment:
       - DEBUG=true
       - VALKEY_HOST=valkey
+      - DB_URL=postgres://nebula:nebula@postgres:5432/nebula
     command: "sh -c 'cd /app && uv run --dev -m app'"
     depends_on:
       valkey:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
 
   valkey:
@@ -24,5 +27,21 @@ services:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
 
+  postgres:
+    image: postgres:17-alpine
+    container_name: nebula-postgres
+    environment:
+      - POSTGRES_USER=nebula
+      - POSTGRES_PASSWORD=nebula
+      - POSTGRES_DB=nebula
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nebula"]
+      interval: 5s
+
 volumes:
   app_venv:
+  postgres_data:
