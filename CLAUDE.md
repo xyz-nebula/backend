@@ -82,6 +82,14 @@ app/
 - **Note:** the middleware currently has no excluded paths — public routes (login, register)
   must be added to a bypass list before the middleware is wired up.
 
+## Commit conventions
+
+Prefer small, focused commits over one large commit bundling unrelated changes —
+split a change into a chain of commits along natural seams (e.g. dependency/config
+setup, then infra, then each logical unit) rather than committing everything at once.
+Format: `feat: <feature-name>: <msg>` (also `fix:`, `refactor:`, `test:`, `docs:`
+as appropriate in place of `feat:`).
+
 ## Storage backends
 
 Controlled by `StorageTypes` enum in `app/config/storage_type.py`:
