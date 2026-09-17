@@ -31,15 +31,15 @@ async def _validation_exception_handler(
 
 def register_exception_handlers(app: FastAPI) -> None:
     # FastAPI dispatches by the registered exception class, so these handlers only
-    # ever run with the narrower type — pyright's ExceptionHandler stub just isn't
+    # ever run with the narrower type — Starlette's ExceptionHandler stub just isn't
     # expressive enough to capture that.
     app.add_exception_handler(
         ApiException,
-        _api_exception_handler,  # pyright: ignore[reportArgumentType]
+        _api_exception_handler,  # ty: ignore[invalid-argument-type]
     )
     app.add_exception_handler(
         RequestValidationError,
-        _validation_exception_handler,  # pyright: ignore[reportArgumentType]
+        _validation_exception_handler,  # ty: ignore[invalid-argument-type]
     )
 
 

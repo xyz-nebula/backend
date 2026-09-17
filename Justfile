@@ -21,7 +21,7 @@ fmt-check: sync
     uv run ruff format --check .
 
 typecheck: sync
-    uv run pyright
+    uv run ty check
 
 test: sync
     uv run --dev pytest -q
