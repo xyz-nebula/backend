@@ -9,9 +9,12 @@ from app.config.config import Settings, settings
 from app.database.actions import (
     activate_user,
     create_user,
+    disable_mfa,
+    enable_mfa,
     get_user_by_email,
     get_user_by_username,
     get_user_by_uuid,
+    set_mfa_secret,
 )
 from app.database.models import User, UserStatus
 from app.exceptions import ApiException
@@ -124,6 +127,42 @@ class AuthService:
 
     async def logout(self, refresh_token: str) -> None:
         await self._tokens.delete(f"{_REFRESH_KEY_PREFIX}{refresh_token}")
+
+    async def enroll_totp(self, user_uuid: str) -> tuple[str, str]:
+        user = await self._require_user(user_uuid)
+        if user.mfa_enabled:
+            raise ApiException(409, "mfa_already_enabled", "TOTP is already enabled")
+
+        secret = pyotp.random_base32()
+        await set_mfa_secret(user, secret)
+        otpauth_url = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="Nebula")
+        return secret, otpauth_url
+
+    async def confirm_totp(self, user_uuid: str, totp_token: str) -> None:
+        user = await self._require_user(user_uuid)
+        if user.mfa_enabled:
+            raise ApiException(409, "mfa_already_enabled", "TOTP is already enabled")
+        if not user.mfa_secret:
+            raise ApiException(400, "totp_not_enrolled", "Start TOTP enrollment first")
+        if not pyotp.TOTP(user.mfa_secret).verify(totp_token):
+            raise ApiException(401, "invalid_totp_token", "Invalid TOTP token")
+
+        await enable_mfa(user)
+
+    async def disable_totp(self, user_uuid: str, password: str) -> None:
+        user = await self._require_user(user_uuid)
+        if not user.mfa_enabled:
+            raise ApiException(409, "mfa_not_enabled", "TOTP is not enabled")
+        if not verify_password(password, user.password):
+            raise ApiException(401, "invalid_credentials", "Invalid password")
+
+        await disable_mfa(user)
+
+    async def _require_user(self, user_uuid: str) -> User:
+        user = await get_user_by_uuid(user_uuid)
+        if user is None:
+            raise ApiException(401, "invalid_token", "User no longer exists")
+        return user
 
     async def _issue_tokens(self, user: User) -> tuple[str, str]:
         access_token = self._jwt_service.encode(

@@ -41,6 +41,19 @@ class AuthTokens(BaseModel):
     refresh_token: str
 
 
+class TotpEnrollResponse(BaseModel):
+    secret: str
+    otpauth_url: str
+
+
+class TotpConfirmRequest(BaseModel):
+    totp_token: str = Field(..., pattern=r"^[0-9]{6}$")
+
+
+class TotpDisableRequest(BaseModel):
+    password: str = Field(..., min_length=8, max_length=128)
+
+
 __all__ = [
     "AuthRegisterRequest",
     "AuthRegisterResponse",
@@ -49,4 +62,7 @@ __all__ = [
     "AuthRefreshRequest",
     "AuthLogoutRequest",
     "AuthTokens",
+    "TotpEnrollResponse",
+    "TotpConfirmRequest",
+    "TotpDisableRequest",
 ]

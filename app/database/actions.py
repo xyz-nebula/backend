@@ -46,6 +46,25 @@ async def set_password(user: User, hashed_password: str) -> User:
     return user
 
 
+async def set_mfa_secret(user: User, secret: str) -> User:
+    user.mfa_secret = secret
+    await user.save(update_fields=["mfa_secret"])
+    return user
+
+
+async def enable_mfa(user: User) -> User:
+    user.mfa_enabled = True
+    await user.save(update_fields=["mfa_enabled"])
+    return user
+
+
+async def disable_mfa(user: User) -> User:
+    user.mfa_enabled = False
+    user.mfa_secret = None
+    await user.save(update_fields=["mfa_enabled", "mfa_secret"])
+    return user
+
+
 __all__ = [
     "get_user_by_email",
     "get_user_by_username",
@@ -53,4 +72,7 @@ __all__ = [
     "create_user",
     "activate_user",
     "set_password",
+    "set_mfa_secret",
+    "enable_mfa",
+    "disable_mfa",
 ]
