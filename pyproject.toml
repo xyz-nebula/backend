@@ -21,3 +21,24 @@ dependencies = [
     "uvicorn>=0.53.0",
     "valkey>=6.1.1",
 ]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    # Expected: TestClient dispatches requests on a separate thread/event loop, and
+    # Tortoise reconnects (harmlessly, since the test DB is file-backed) when that happens.
+    "ignore::tortoise.warnings.TortoiseLoopSwitchWarning",
+    # Expected: the test JWT secret is short on purpose, no need for production-grade entropy.
+    "ignore::jwt.warnings.InsecureKeyLengthWarning",
+]
