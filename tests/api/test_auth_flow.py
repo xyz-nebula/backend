@@ -3,32 +3,8 @@ from fastapi.testclient import TestClient
 
 from app.database.models import User, UserStatus
 
-REGISTER_PAYLOAD = {
-    "email": "test@example.com",
-    "username": "testuser",
-    "first_name": "Test",
-    "last_name": "User",
-    "password": "password123",
-}
-
-
-def _register(client: TestClient, **overrides) -> dict:
-    payload = {**REGISTER_PAYLOAD, **overrides}
-    response = client.post("/v1/auth/user/register", json=payload)
-    assert response.status_code == 200, response.text
-    return response.json()
-
-
-def _activate(client: TestClient, code: str) -> dict:
-    response = client.post("/v1/auth/user/register/activate", json={"code": code})
-    assert response.status_code == 200, response.text
-    return response.json()
-
-
-def _register_and_activate(client, fake_mailer, **overrides) -> dict:
-    _register(client, **overrides)
-    _, code = fake_mailer.sent[-1]
-    return _activate(client, code)
+from tests.helpers import REGISTER_PAYLOAD, activate as _activate, register as _register
+from tests.helpers import register_and_activate as _register_and_activate
 
 
 async def test_register_success(client: TestClient, fake_mailer):
@@ -43,7 +19,7 @@ async def test_register_success(client: TestClient, fake_mailer):
 async def test_register_duplicate_email_conflicts(client: TestClient, fake_mailer):
     _register(client)
     response = client.post(
-        "/v1/auth/user/register",
+        "/v1/auth/register",
         json={**REGISTER_PAYLOAD, "username": "otheruser"},
     )
     assert response.status_code == 409
@@ -53,7 +29,7 @@ async def test_register_duplicate_email_conflicts(client: TestClient, fake_maile
 async def test_register_duplicate_username_conflicts(client: TestClient, fake_mailer):
     _register(client)
     response = client.post(
-        "/v1/auth/user/register",
+        "/v1/auth/register",
         json={**REGISTER_PAYLOAD, "email": "other@example.com"},
     )
     assert response.status_code == 409
@@ -62,7 +38,7 @@ async def test_register_duplicate_username_conflicts(client: TestClient, fake_ma
 
 async def test_register_validation_error(client: TestClient):
     response = client.post(
-        "/v1/auth/user/register",
+        "/v1/auth/register",
         json={**REGISTER_PAYLOAD, "username": "ab"},
     )
     assert response.status_code == 400
@@ -83,7 +59,7 @@ async def test_activate_success(client: TestClient, fake_mailer):
 
 async def test_activate_bogus_code_returns_404(client: TestClient):
     response = client.post(
-        "/v1/auth/user/register/activate",
+        "/v1/auth/register/activate",
         json={"code": "00000000-0000-0000-0000-000000000000"},
     )
     assert response.status_code == 404
@@ -95,14 +71,14 @@ async def test_activate_code_cannot_be_reused(client: TestClient, fake_mailer):
     _, code = fake_mailer.sent[0]
     _activate(client, code)
 
-    response = client.post("/v1/auth/user/register/activate", json={"code": code})
+    response = client.post("/v1/auth/register/activate", json={"code": code})
     assert response.status_code == 404
 
 
 async def test_login_before_activation_forbidden(client: TestClient, fake_mailer):
     _register(client)
     response = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": REGISTER_PAYLOAD["password"]},
     )
     assert response.status_code == 403
@@ -116,7 +92,7 @@ async def test_login_suspended_user_forbidden(client: TestClient, fake_mailer):
     await user.save(update_fields=["status"])
 
     response = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": REGISTER_PAYLOAD["password"]},
     )
     assert response.status_code == 403
@@ -126,7 +102,7 @@ async def test_login_suspended_user_forbidden(client: TestClient, fake_mailer):
 async def test_login_wrong_password(client: TestClient, fake_mailer):
     _register_and_activate(client, fake_mailer)
     response = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": "wrong-password"},
     )
     assert response.status_code == 401
@@ -136,7 +112,7 @@ async def test_login_wrong_password(client: TestClient, fake_mailer):
 async def test_login_success(client: TestClient, fake_mailer):
     _register_and_activate(client, fake_mailer)
     response = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": REGISTER_PAYLOAD["password"]},
     )
     assert response.status_code == 200
@@ -152,14 +128,14 @@ async def test_login_mfa_required_when_enabled(client: TestClient, fake_mailer):
     await user.save(update_fields=["mfa_enabled", "mfa_secret"])
 
     response = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": REGISTER_PAYLOAD["password"]},
     )
     assert response.status_code == 401
     assert response.json()["code"] == "mfa_required"
 
     wrong = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={
             "email": REGISTER_PAYLOAD["email"],
             "password": REGISTER_PAYLOAD["password"],
@@ -170,7 +146,7 @@ async def test_login_mfa_required_when_enabled(client: TestClient, fake_mailer):
     assert wrong.json()["code"] == "invalid_credentials"
 
     correct = client.post(
-        "/v1/auth/user/login",
+        "/v1/auth/login",
         json={
             "email": REGISTER_PAYLOAD["email"],
             "password": REGISTER_PAYLOAD["password"],
@@ -197,16 +173,17 @@ async def test_refresh_rotates_token(client: TestClient, fake_mailer):
 async def test_logout_requires_bearer_token(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
     response = client.post(
-        "/v1/auth/user/logout", json={"refresh_token": tokens["refresh_token"]}
+        "/v1/auth/logout", json={"refresh_token": tokens["refresh_token"]}
     )
     assert response.status_code == 401
+    assert response.json()["code"] == "missing_token"
 
 
 async def test_logout_invalidates_refresh_token(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
 
     response = client.post(
-        "/v1/auth/user/logout",
+        "/v1/auth/logout",
         json={"refresh_token": tokens["refresh_token"]},
         headers={"Authorization": f"Bearer {tokens['access_token']}"},
     )
