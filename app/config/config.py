@@ -12,5 +12,7 @@ class Settings(BaseSettings):
     valkey_port: int = 6379
     valkey_db: int = 0
 
+    debug: bool = False
+
 
 settings = Settings()
