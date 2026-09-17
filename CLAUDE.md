@@ -5,9 +5,10 @@ FastAPI backend for the Nebula project. Python 3.14+, managed with `uv`.
 ## Stack
 
 - **FastAPI** + **Uvicorn** — web framework
-- **Tortoise ORM** — async database ORM (models not yet implemented)
-- **PyJWT** — JWT auth
-- **Valkey** (Redis-compatible) — token/session storage
+- **Tortoise ORM** + **Postgres** — async database ORM (`User` model implemented; see `app/database/models.py`)
+- **PyJWT** — JWT auth (access tokens only — refresh tokens are opaque, stored in Valkey)
+- **Valkey** (Redis-compatible) — token/session storage: activation codes and refresh tokens, both TTL-based
+- **aiosmtplib** — activation email delivery (prod); logs the link instead in dev (`MAILER_TYPE`)
 - **Pydantic Settings** — config from `.env`
 
 ## Setup
@@ -30,13 +31,11 @@ FastAPI backend for the Nebula project. Python 3.14+, managed with `uv`.
 ## Running
 
 ```bash
-# Local dev (no Docker)
+# Docker dev stack (app + valkey + postgres)
 just run-dev
-# or directly:
-uv run app
 
-# Docker dev build + run
-just run-docker
+# Reset the dev Postgres database (drops the postgres container + volume)
+just reset-db
 
 # Docker production build only
 just build-docker
@@ -63,24 +62,48 @@ docker stop valkey && docker rm valkey
 
 ```
 app/
-├── api/v1/routers/     # Route handlers (auth.py is a placeholder)
-├── config/             # Pydantic Settings, StorageTypes enum, ValkeyConfig
-├── database/           # Tortoise ORM models and actions (not yet implemented)
-├── dependencies.py     # FastAPI Depends() for Bearer token extraction
-├── middleware/         # JWTAuthenticationMiddleware
+├── api/v1/routers/     # Route handlers — auth.py implements the openapi.yaml auth API
+├── config/             # Pydantic Settings, StorageTypes/MailerType enums, ValkeyConfig
+├── database/           # User model (Tortoise) + query/mutation helpers in actions.py
+├── dependencies.py     # get_current_token_payload() — sole bearer-token verifier
+├── exceptions.py        # ApiException + handlers -> {code, message, field} error envelope
 ├── repository/         # BaseRepository, LocalRepository, ValkeyRepository, RepositoryFactory
-├── services/           # JWTService (decode/validate tokens)
-└── utils/              # time_helpers (cast_to_seconds)
+├── services/           # JWTService (encode/decode), AuthService (register/activate/login/
+│                        # refresh/logout/totp enroll-confirm-disable), mailer.py
+│                        # (ActivationMailer: SMTP prod / log dev)
+└── utils/              # time_helpers (cast_to_seconds), password (bcrypt hash/verify)
 ```
 
 ## Auth flow
 
-- `JWTAuthenticationMiddleware` extracts the Bearer token from the `Authorization` header,
-  validates it via `JWTService`, and stores the decoded payload in `scope["state"]["user"]`.
-- `dependencies.py` provides `get_current_token_payload()` as a FastAPI `Depends()` for
-  protecting individual routes.
-- **Note:** the middleware currently has no excluded paths — public routes (login, register)
-  must be added to a bypass list before the middleware is wired up.
+Implements `openapi.yaml` (register → email activation → login → refresh → logout,
+plus TOTP/MFA enrollment). See `app/services/AuthService.py` for the full flow. Key
+points:
+- Access tokens are short-lived JWTs (`JWTService`, HS256, never revoked server-side).
+  Refresh tokens are opaque (`secrets.token_urlsafe`), stored in Valkey as
+  `refresh:{token} -> user_uuid` with a TTL, and rotated (old one deleted) on every use.
+- Activation codes are opaque UUIDs stored in Valkey as `activation:{code} -> user_uuid`
+  with a TTL — there's no separate Postgres table for them or for refresh tokens, since
+  Valkey already covers ephemeral, TTL-based storage.
+- `app/api/v1/routers/auth.py` splits its routes into `public_router` (register,
+  activate, login, refresh — no auth) and `protected_router` (logout, `totp/*`), the
+  latter with `dependencies=[Depends(get_current_token_payload)]` at the router level
+  — every route added to it requires a bearer token without repeating the `Depends`.
+  There's no ASGI auth middleware; `get_current_token_payload`
+  (`app/dependencies.py`) is the *only* place a bearer token is verified.
+- TOTP/MFA: `POST /v1/auth/totp/enroll` generates a secret (stored on `User.mfa_secret`,
+  `mfa_enabled` stays `False`), `POST /v1/auth/totp/confirm` verifies a code against it
+  and flips `mfa_enabled` on, `DELETE /v1/auth/totp` (password-confirmed) turns it back
+  off. `login` then requires `totp_token` whenever `mfa_enabled` is `True`.
+- Rate limiting (429s in the spec) is not implemented yet.
+
+## Commit conventions
+
+Prefer small, focused commits over one large commit bundling unrelated changes —
+split a change into a chain of commits along natural seams (e.g. dependency/config
+setup, then infra, then each logical unit) rather than committing everything at once.
+Format: `feat: <feature-name>: <msg>` (also `fix:`, `refactor:`, `test:`, `docs:`
+as appropriate in place of `feat:`).
 
 ## Storage backends
 

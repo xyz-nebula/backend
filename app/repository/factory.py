@@ -100,4 +100,8 @@ class RepositoryFactory:
         return ValkeyRepository(config)
 
 
-__all__ = ["RepositoryFactory"]
+def get_token_repository() -> BaseRepository:
+    return RepositoryFactory.create(ValkeyConfig())
+
+
+__all__ = ["RepositoryFactory", "get_token_repository"]
