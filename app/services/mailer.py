@@ -44,13 +44,19 @@ class SMTPActivationMailer(ActivationMailer):
             "If you didn't request this, you can ignore this email."
         )
 
+        # Port 465 is implicit TLS (SMTPS) — the server expects a TLS handshake
+        # immediately, not a plaintext greeting, so it needs aiosmtplib's use_tls=
+        # rather than start_tls= (the STARTTLS-upgrade mode used on e.g. port 587).
+        implicit_tls = self._config.smtp_port == 465
+
         await aiosmtplib.send(
             message,
             hostname=self._config.smtp_host,
             port=self._config.smtp_port,
             username=self._config.smtp_user,
             password=self._config.smtp_password,
-            start_tls=self._config.smtp_use_tls,
+            use_tls=implicit_tls,
+            start_tls=False if implicit_tls else self._config.smtp_use_tls,
         )
 
 
