@@ -8,11 +8,11 @@ class StorageTypes(str, Enum):
     An enumeration of supported storage types for session management.
 
     Attributes:
-        REDIS (str): Utilizes a Redis database to store session data, suitable for distributed systems.
+        VALKEY (str): Utilizes a Valkey database to store session data, suitable for distributed systems.
         MEMORY (str): Utilizes an in-memory dictionary to store session data, suitable for single-instance applications.
     """
 
-    REDIS = "redis"
+    VALKEY = "valkey"
     MEMORY = "memory"
 
     @classmethod

@@ -45,11 +45,11 @@ class ValkeyConfig(StorageConfig):
         url (Optional[str]): A custom Valkey URL, if provided. Defaults to None.
     """
 
-    storage_type: StorageTypes = Field(default=StorageTypes.valkey)
-    host: str = Field(default_factory=settings.valkey_host)
-    port: int = Field(default_factory=settings.valkey_port)
-    db: int = Field(default_factory=settings.valkey_db)
-    # password: Optional[str] = Field(default_factory=lambda: config("valkey_PASSWORD", default=None))
+    storage_type: StorageTypes = Field(default=StorageTypes.VALKEY)
+    host: str = Field(default=settings.valkey_host)
+    port: int = Field(default=settings.valkey_port)
+    db: int = Field(default=settings.valkey_db)
+    password: Optional[str] = Field(default=None)
     url: Optional[str] = Field(default=None)
 
     def __repr__(self) -> str:

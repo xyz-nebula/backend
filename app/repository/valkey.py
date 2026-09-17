@@ -134,4 +134,4 @@ class ValkeyRepository(BaseRepository):
         await self._valkey.delete(key)
 
 
-__all__ = ["valkeyRepository"]
+__all__ = ["ValkeyRepository"]

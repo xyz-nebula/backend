@@ -56,11 +56,11 @@ class RepositoryFactory:
             ValueError: Unknown storage type: UNKNOWN_TYPE, available types: ['redis', 'memory']
         """
         storage_type = config.model_dump().get("storage_type", StorageTypes.MEMORY)
-        if storage_type == StorageTypes.REDIS:
-            valkey_config = ValkeyConfig(**config.model_dump(exclude=storage_type))
+        if storage_type == StorageTypes.VALKEY:
+            valkey_config = ValkeyConfig(**config.model_dump(exclude={"storage_type"}))
             return RepositoryFactory._create_valkey_repository(valkey_config)
         elif storage_type == StorageTypes.MEMORY:
-            in_memory_config = StorageConfig(**config.model_dump(exclude=storage_type))
+            in_memory_config = StorageConfig(**config.model_dump(exclude={"storage_type"}))
             return RepositoryFactory._create_local_repository(in_memory_config)
         else:
             raise ValueError(
