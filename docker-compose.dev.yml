@@ -7,10 +7,12 @@ services:
     volumes:
       - .:/app
       - app_venv:/app/.venv
+      - uv_cache:/root/.local/share/uv
     environment:
       - DEBUG=true
       - VALKEY_HOST=valkey
       - DB_URL=postgres://nebula:nebula@postgres:5432/nebula
+      - UV_LINK_MODE=copy
     command: "sh -c 'cd /app && uv run --dev -m app'"
     depends_on:
       valkey:
@@ -44,4 +46,5 @@ services:
 
 volumes:
   app_venv:
+  uv_cache:
   postgres_data:
