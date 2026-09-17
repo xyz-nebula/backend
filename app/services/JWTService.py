@@ -17,8 +17,8 @@ class JWTService:
         self.secret_key = secret_key
         self.algorithm = algorithm
 
-    def encode(self, sub: str, expires_delta: timedelta) -> str:
-        now = datetime.now(timezone.utc)
+    def encode(self, sub: str, expires_delta: timedelta, now: datetime | None = None) -> str:
+        now = now or datetime.now(timezone.utc)
         payload = TokenPayload(
             sub=sub,
             iat=int(now.timestamp()),

@@ -3,9 +3,9 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pyotp
+from fastapi import Depends
 
 from app.config.config import Settings, settings
-from app.config.storage import ValkeyConfig
 from app.database.actions import (
     activate_user,
     create_user,
@@ -16,7 +16,7 @@ from app.database.actions import (
 from app.database.models import User, UserStatus
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
-from app.repository.factory import RepositoryFactory
+from app.repository.factory import get_token_repository
 from app.services.JWTService import JWTService, get_jwt_service
 from app.services.mailer import ActivationMailer, get_activation_mailer
 from app.utils.password import hash_password, verify_password
@@ -139,12 +139,16 @@ class AuthService:
         return access_token, refresh_token
 
 
-def get_auth_service() -> AuthService:
+def get_auth_service(
+    jwt_service: JWTService = Depends(get_jwt_service),
+    mailer: ActivationMailer = Depends(get_activation_mailer),
+    token_repository: BaseRepository = Depends(get_token_repository),
+) -> AuthService:
     return AuthService(
         config=settings,
-        jwt_service=get_jwt_service(),
-        mailer=get_activation_mailer(),
-        token_repository=RepositoryFactory.create(ValkeyConfig()),
+        jwt_service=jwt_service,
+        mailer=mailer,
+        token_repository=token_repository,
     )
 
 
