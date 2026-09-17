@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.config.mailer_type import MailerType
+from app.config.smtp_tls_mode import SmtpTlsMode
 
 
 class Settings(BaseSettings):
@@ -31,7 +32,7 @@ class Settings(BaseSettings):
     smtp_user: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_from: str = "no-reply@nebula.local"
-    smtp_use_tls: bool = True
+    smtp_tls_mode: SmtpTlsMode = SmtpTlsMode.STARTTLS
 
 
 settings = Settings()
