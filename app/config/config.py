@@ -33,6 +33,4 @@ class Settings(BaseSettings):
     smtp_tls_mode: SmtpTlsMode = SmtpTlsMode.STARTTLS
 
 
-# jwt_secret_key has no default — pydantic-settings fills it from the environment/
-# .env at runtime, which pyright can't see, hence the ignore.
-settings = Settings()  # pyright: ignore[reportCallIssue]
+settings = Settings()
