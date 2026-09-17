@@ -65,31 +65,36 @@ app/
 ├── api/v1/routers/     # Route handlers — auth.py implements the openapi.yaml auth API
 ├── config/             # Pydantic Settings, StorageTypes/MailerType enums, ValkeyConfig
 ├── database/           # User model (Tortoise) + query/mutation helpers in actions.py
-├── dependencies.py     # FastAPI Depends() for Bearer token extraction
+├── dependencies.py     # get_current_token_payload() — sole bearer-token verifier
 ├── exceptions.py        # ApiException + handlers -> {code, message, field} error envelope
-├── middleware/         # JWTAuthenticationMiddleware (see note below)
 ├── repository/         # BaseRepository, LocalRepository, ValkeyRepository, RepositoryFactory
 ├── services/           # JWTService (encode/decode), AuthService (register/activate/login/
-│                        # refresh/logout), mailer.py (ActivationMailer: SMTP prod / log dev)
+│                        # refresh/logout/totp enroll-confirm-disable), mailer.py
+│                        # (ActivationMailer: SMTP prod / log dev)
 └── utils/              # time_helpers (cast_to_seconds), password (bcrypt hash/verify)
 ```
 
 ## Auth flow
 
-Implements `openapi.yaml` (register → email activation → login → refresh → logout).
-See `app/services/AuthService.py` for the full flow. Key points:
+Implements `openapi.yaml` (register → email activation → login → refresh → logout,
+plus TOTP/MFA enrollment). See `app/services/AuthService.py` for the full flow. Key
+points:
 - Access tokens are short-lived JWTs (`JWTService`, HS256, never revoked server-side).
   Refresh tokens are opaque (`secrets.token_urlsafe`), stored in Valkey as
   `refresh:{token} -> user_uuid` with a TTL, and rotated (old one deleted) on every use.
 - Activation codes are opaque UUIDs stored in Valkey as `activation:{code} -> user_uuid`
   with a TTL — there's no separate Postgres table for them or for refresh tokens, since
   Valkey already covers ephemeral, TTL-based storage.
-- `dependencies.py` provides `get_current_token_payload()` as a FastAPI `Depends()`,
-  used to protect `logout` (the only endpoint in this API that requires a bearer token).
-- **Note:** `JWTAuthenticationMiddleware` is still unwired and has no path-exclusion
-  support — the auth router relies on `get_current_token_payload()` per-route instead.
-- MFA/TOTP: `User.mfa_enabled`/`mfa_secret` exist and `login` checks them, but there's no
-  enrollment endpoint yet, so `mfa_enabled` is always `False` in practice.
+- `app/api/v1/routers/auth.py` splits its routes into `public_router` (register,
+  activate, login, refresh — no auth) and `protected_router` (logout, `totp/*`), the
+  latter with `dependencies=[Depends(get_current_token_payload)]` at the router level
+  — every route added to it requires a bearer token without repeating the `Depends`.
+  There's no ASGI auth middleware; `get_current_token_payload`
+  (`app/dependencies.py`) is the *only* place a bearer token is verified.
+- TOTP/MFA: `POST /v1/auth/totp/enroll` generates a secret (stored on `User.mfa_secret`,
+  `mfa_enabled` stays `False`), `POST /v1/auth/totp/confirm` verifies a code against it
+  and flips `mfa_enabled` on, `DELETE /v1/auth/totp` (password-confirmed) turns it back
+  off. `login` then requires `totp_token` whenever `mfa_enabled` is `True`.
 - Rate limiting (429s in the spec) is not implemented yet.
 
 ## Commit conventions
