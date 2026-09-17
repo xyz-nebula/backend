@@ -6,7 +6,6 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app.api.v1 import router as v1_router
 from app.api.v1.routers import health_router
-from app.middleware.middleware import JWTAuthenticationMiddleware
 from app.exceptions import register_exception_handlers
 
 from app.config.config import settings
