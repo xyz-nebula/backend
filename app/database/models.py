@@ -1,11 +1,11 @@
 import uuid
-from enum import Enum
+from enum import StrEnum
 
 from tortoise import fields
 from tortoise.models import Model
 
 
-class UserStatus(str, Enum):
+class UserStatus(StrEnum):
     PENDING_ACTIVATION = "pending_activation"
     ACTIVE = "active"
     SUSPENDED = "suspended"

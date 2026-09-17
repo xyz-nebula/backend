@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.config.mailer_type import MailerType
@@ -27,12 +25,14 @@ class Settings(BaseSettings):
     activation_link_base_url: str = "http://localhost:5173/activate?code={code}"
 
     mailer_type: MailerType = MailerType.LOG
-    smtp_host: Optional[str] = None
+    smtp_host: str | None = None
     smtp_port: int = 587
-    smtp_user: Optional[str] = None
-    smtp_password: Optional[str] = None
+    smtp_user: str | None = None
+    smtp_password: str | None = None
     smtp_from: str = "no-reply@nebula.local"
     smtp_tls_mode: SmtpTlsMode = SmtpTlsMode.STARTTLS
 
 
-settings = Settings()
+# jwt_secret_key has no default — pydantic-settings fills it from the environment/
+# .env at runtime, which pyright can't see, hence the ignore.
+settings = Settings()  # pyright: ignore[reportCallIssue]

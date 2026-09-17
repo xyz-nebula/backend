@@ -9,9 +9,9 @@ from fastapi.testclient import TestClient
 from tortoise.contrib.test import truncate_all_models
 
 from app.app import app
+from app.config.storage import StorageConfig
 from app.repository.factory import get_token_repository
 from app.repository.local import LocalRepository
-from app.config.storage import StorageConfig
 from app.services.mailer import ActivationMailer, get_activation_mailer
 
 

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any
 
 from app.config.types import EXPIRATION_DTYPE
 
@@ -13,7 +13,7 @@ class SingletonABCMeta(ABCMeta):
     (as an ABC).
     """
 
-    _instances: Dict[Any, Any] = {}
+    _instances: dict[Any, Any] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -33,7 +33,7 @@ class BaseRepository(metaclass=SingletonABCMeta):
         get(key: str) -> Optional[Any]:
             Abstract method to retrieve a value by key.
 
-        set(key: str, value: Any, expiration: Optional[Union[int, float, datetime.timedelta]] = None) -> None:
+        set(key: str, value: Any, expiration: EXPIRATION_DTYPE | None = None) -> None:
             Abstract method to store a value with an optional expiration.
 
         delete(key: str) -> None:
@@ -41,7 +41,7 @@ class BaseRepository(metaclass=SingletonABCMeta):
     """
 
     @abstractmethod
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """
         Retrieve a value from the storage by its key.
 
@@ -54,16 +54,15 @@ class BaseRepository(metaclass=SingletonABCMeta):
         pass
 
     @abstractmethod
-    async def set(
-        self, key: str, value: Any, expiration: Optional[EXPIRATION_DTYPE] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, expiration: EXPIRATION_DTYPE | None = None) -> None:
         """
         Store a value in the storage with an optional expiration time.
 
         Args:
             key (str): The key to associate with the value.
             value (Any): The value to store.
-            expiration (Optional[Union[int, float, datetime.timedelta]]): Time in seconds before the value expires. Defaults to None.
+            expiration (int | float | datetime.timedelta | None): Time in seconds before
+                the value expires. Defaults to None.
 
         Returns:
             None

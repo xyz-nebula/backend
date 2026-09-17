@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from valkey.asyncio import Redis
 
@@ -51,7 +51,7 @@ class ValkeyRepository(BaseRepository):
         """
         return self._config
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """
         Retrieve a value from the valkey store by its key.
 
@@ -86,7 +86,7 @@ class ValkeyRepository(BaseRepository):
         self,
         key: str,
         value: str,
-        expiration: Optional[EXPIRATION_DTYPE] = None,
+        expiration: EXPIRATION_DTYPE | None = None,
     ) -> None:
         """
         Store a value in the valkey store with an optional expiration time.

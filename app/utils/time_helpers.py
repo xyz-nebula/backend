@@ -1,10 +1,9 @@
 from datetime import timedelta
-from typing import Optional, Union
 
 from ..config.types import EXPIRATION_DTYPE
 
 
-def cast_to_seconds(expiration: Union[EXPIRATION_DTYPE, None]) -> Optional[int]:
+def cast_to_seconds(expiration: EXPIRATION_DTYPE | None) -> int | None:
     """
     Casts the expiration value to seconds.
 

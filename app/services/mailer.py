@@ -1,8 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+from email.message import EmailMessage
 
 import aiosmtplib
-from email.message import EmailMessage
 
 from app.config.config import Settings, settings
 from app.config.mailer_type import MailerType

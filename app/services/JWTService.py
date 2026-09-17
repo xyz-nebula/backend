@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ class JWTService:
         self.algorithm = algorithm
 
     def encode(self, sub: str, expires_delta: timedelta, now: datetime | None = None) -> str:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         payload = TokenPayload(
             sub=sub,
             iat=int(now.timestamp()),
