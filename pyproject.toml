@@ -21,6 +21,8 @@ dependencies = [
     "uvicorn>=0.53.0",
     "valkey>=6.1.1",
 ]
+[project.scripts]
+nebula-backend = "app:main"
 
 [dependency-groups]
 dev = [
@@ -30,6 +32,9 @@ dev = [
     "ruff>=0.9.0",
     "ty>=0.0.1a1",
 ]
+
+[tool.uv]
+package = true
 
 [tool.ruff]
 line-length = 100

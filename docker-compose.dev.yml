@@ -13,7 +13,7 @@ services:
       - VALKEY_HOST=valkey
       - DB_URL=postgres://nebula:nebula@postgres:5432/nebula
       - UV_LINK_MODE=copy
-    command: "sh -c 'cd /app && uv run --dev -m app'"
+    command: "sh -c 'cd /app && uv run --dev nebula-backend'"
     depends_on:
       valkey:
         condition: service_healthy

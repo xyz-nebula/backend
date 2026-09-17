@@ -11,12 +11,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-if __name__ == "__main__":
+
+def main() -> None:
     uvicorn.run(
-        "app.app:app",
+        app="app.app:app",
         host="0.0.0.0",
         port=settings.port,
         log_level="debug" if settings.debug else "info",
         access_log=settings.debug,
         reload=settings.debug,
     )
+
+
+if __name__ == "__main__":
+    main()
