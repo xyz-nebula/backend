@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     valkey_db: int = 0
 
     debug: bool = False
+    log_level: str = "INFO"
+    db_url: str = "sqlite://db.sqlite3"
+
 
 
 settings = Settings()
