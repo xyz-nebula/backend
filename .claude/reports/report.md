@@ -54,6 +54,7 @@ without a `Bearer` token gets a `401` before reaching any route handler. This me
 ```python
 PUBLIC_PATHS = {"/auth/login", "/auth/register", "/docs", "/openapi.json", "/health"}
 
+
 async def __call__(self, scope, receive, send):
     if scope["type"] not in ("http", "websocket"):
         await self.app(scope, receive, send)
