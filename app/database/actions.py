@@ -1,18 +1,17 @@
-from typing import Optional
 from uuid import UUID
 
 from app.database.models import User, UserStatus
 
 
-async def get_user_by_email(email: str) -> Optional[User]:
+async def get_user_by_email(email: str) -> User | None:
     return await User.get_or_none(email=email)
 
 
-async def get_user_by_username(username: str) -> Optional[User]:
+async def get_user_by_username(username: str) -> User | None:
     return await User.get_or_none(username=username)
 
 
-async def get_user_by_uuid(user_uuid: UUID | str) -> Optional[User]:
+async def get_user_by_uuid(user_uuid: UUID | str) -> User | None:
     return await User.get_or_none(uuid=user_uuid)
 
 

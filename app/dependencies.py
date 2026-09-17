@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -10,7 +8,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_token_payload(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     jwt_service: JWTService = Depends(get_jwt_service),
 ) -> TokenPayload:
     if credentials is None:

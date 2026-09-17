@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -17,7 +17,7 @@ def test_encode_decode_roundtrip(jwt_service: JWTService):
 
 
 def test_expired_token_raises(jwt_service: JWTService):
-    past = datetime.now(timezone.utc) - timedelta(hours=1)
+    past = datetime.now(UTC) - timedelta(hours=1)
     token = jwt_service.encode(sub="user-123", expires_delta=timedelta(minutes=5), now=past)
     with pytest.raises(ValueError):
         jwt_service.decode(token)

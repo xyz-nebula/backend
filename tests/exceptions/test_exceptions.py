@@ -1,3 +1,4 @@
+from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 
 from app.exceptions import ApiException, _validation_exception_handler
@@ -31,9 +32,10 @@ async def test_validation_handler_maps_to_400_with_field():
         ]
     )
 
-    response = await _validation_exception_handler(request=None, exc=exc)
+    request = Request(scope={"type": "http", "headers": []})
+    response = await _validation_exception_handler(request=request, exc=exc)
 
     assert response.status_code == 400
-    body = response.body.decode()
+    body = bytes(response.body).decode()
     assert '"code":"validation_error"' in body
     assert '"field":"username"' in body

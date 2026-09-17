@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..config.storage import StorageConfig
 from ..config.types import EXPIRATION_DTYPE
@@ -17,7 +17,8 @@ class LocalRepository(BaseRepository):
 
     Attributes:
         _store (Dict[str, Any]): The dictionary that stores key-value pairs.
-        _expirations (Dict[str, datetime]): A dictionary that keeps track of expiration times for keys.
+        _expirations (Dict[str, datetime]): A dictionary that keeps track of expiration
+            times for keys.
         _config (StorageConfig): Configuration object for the repository.
     """
 
@@ -28,8 +29,8 @@ class LocalRepository(BaseRepository):
         Args:
             config (StorageConfig): The configuration object for the repository.
         """
-        self._store: Dict[str, Any] = {}
-        self._expirations: Dict[str, datetime] = {}
+        self._store: dict[str, Any] = {}
+        self._expirations: dict[str, datetime] = {}
         self._config: StorageConfig = config
 
     @property
@@ -52,7 +53,7 @@ class LocalRepository(BaseRepository):
         """
         self._config = config
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """
         Retrieve a value from the repository by its key.
 
@@ -90,7 +91,7 @@ class LocalRepository(BaseRepository):
         self,
         key: str,
         value: Any,
-        expiration: Optional[EXPIRATION_DTYPE] = None,
+        expiration: EXPIRATION_DTYPE | None = None,
     ) -> None:
         """
         Store a value in the repository with an optional expiration time.

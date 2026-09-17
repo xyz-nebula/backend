@@ -2,8 +2,8 @@ import pyotp
 from fastapi.testclient import TestClient
 
 from app.database.models import User
-
-from tests.helpers import REGISTER_PAYLOAD, auth_headers as _auth_headers
+from tests.helpers import REGISTER_PAYLOAD
+from tests.helpers import auth_headers as _auth_headers
 from tests.helpers import register_and_activate as _register_and_activate
 
 

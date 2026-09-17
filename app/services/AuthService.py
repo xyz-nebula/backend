@@ -77,11 +77,15 @@ class AuthService:
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"
         user_uuid = await self._tokens.get(key)
         if user_uuid is None:
-            raise ApiException(404, "activation_code_not_found", "Activation code not found or expired")
+            raise ApiException(
+                404, "activation_code_not_found", "Activation code not found or expired"
+            )
 
         user = await get_user_by_uuid(user_uuid)
         if user is None:
-            raise ApiException(404, "activation_code_not_found", "Activation code not found or expired")
+            raise ApiException(
+                404, "activation_code_not_found", "Activation code not found or expired"
+            )
 
         await activate_user(user)
         await self._tokens.delete(key)
@@ -100,12 +104,17 @@ class AuthService:
             raise ApiException(401, "invalid_credentials", "Invalid email or password")
 
         if user.status != UserStatus.ACTIVE:
-            code = "account_suspended" if user.status == UserStatus.SUSPENDED else "account_not_activated"
+            code = (
+                "account_suspended"
+                if user.status == UserStatus.SUSPENDED
+                else "account_not_activated"
+            )
             raise ApiException(403, code, "Account is not permitted to log in")
 
         if user.mfa_enabled:
             if not totp_token:
                 raise ApiException(401, "mfa_required", "TOTP token is required")
+            assert user.mfa_secret is not None, "mfa_enabled implies mfa_secret is set"
             if not pyotp.TOTP(user.mfa_secret).verify(totp_token):
                 raise ApiException(401, "invalid_credentials", "Invalid TOTP token")
 

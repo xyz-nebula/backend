@@ -1,15 +1,17 @@
 # config/storage_type.py
 
-from enum import Enum
+from enum import StrEnum
 
 
-class StorageTypes(str, Enum):
+class StorageTypes(StrEnum):
     """
     An enumeration of supported storage types for session management.
 
     Attributes:
-        VALKEY (str): Utilizes a Valkey database to store session data, suitable for distributed systems.
-        MEMORY (str): Utilizes an in-memory dictionary to store session data, suitable for single-instance applications.
+        VALKEY (str): Utilizes a Valkey database to store session data, suitable for
+            distributed systems.
+        MEMORY (str): Utilizes an in-memory dictionary to store session data, suitable
+            for single-instance applications.
     """
 
     VALKEY = "valkey"

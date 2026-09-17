@@ -1,8 +1,8 @@
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.config.storage_type import StorageTypes
 from app.config.config import settings
+from app.config.storage_type import StorageTypes
+
 
 class StorageConfig(BaseModel):
     """
@@ -34,7 +34,8 @@ class ValkeyConfig(StorageConfig):
 
     This class extends `StorageConfig` to provide configuration specific to Valkey storage.
     It allows for setting up connection details such as host, port, database, and password.
-    Additionally, it includes a method to construct the Valkey URL based on the provided configuration.
+    Additionally, it includes a method to construct the Valkey URL based on the provided
+    configuration.
 
     Attributes:
         storage_type (StorageTypes): The type of storage to use. Defaults to `StorageTypes.valkey`.
@@ -49,8 +50,8 @@ class ValkeyConfig(StorageConfig):
     host: str = Field(default=settings.valkey_host)
     port: int = Field(default=settings.valkey_port)
     db: int = Field(default=settings.valkey_db)
-    password: Optional[str] = Field(default=None)
-    url: Optional[str] = Field(default=None)
+    password: str | None = Field(default=None)
+    url: str | None = Field(default=None)
 
     def __repr__(self) -> str:
         """

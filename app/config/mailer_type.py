@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MailerType(str, Enum):
+class MailerType(StrEnum):
     """
     Which backend sends activation links.
 

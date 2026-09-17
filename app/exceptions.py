@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -9,11 +7,11 @@ from pydantic import BaseModel
 class ApiError(BaseModel):
     code: str
     message: str
-    field: Optional[str] = None
+    field: str | None = None
 
 
 class ApiException(Exception):
-    def __init__(self, status_code: int, code: str, message: str, field: Optional[str] = None):
+    def __init__(self, status_code: int, code: str, message: str, field: str | None = None):
         self.status_code = status_code
         self.error = ApiError(code=code, message=message, field=field)
 
@@ -32,8 +30,17 @@ async def _validation_exception_handler(
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(ApiException, _api_exception_handler)
-    app.add_exception_handler(RequestValidationError, _validation_exception_handler)
+    # FastAPI dispatches by the registered exception class, so these handlers only
+    # ever run with the narrower type — pyright's ExceptionHandler stub just isn't
+    # expressive enough to capture that.
+    app.add_exception_handler(
+        ApiException,
+        _api_exception_handler,  # pyright: ignore[reportArgumentType]
+    )
+    app.add_exception_handler(
+        RequestValidationError,
+        _validation_exception_handler,  # pyright: ignore[reportArgumentType]
+    )
 
 
 __all__ = ["ApiError", "ApiException", "register_exception_handlers"]

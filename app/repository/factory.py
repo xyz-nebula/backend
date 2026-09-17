@@ -1,8 +1,6 @@
-from typing import Union
-
 from pydantic import BaseModel
 
-from app.config.storage import ValkeyConfig, StorageConfig
+from app.config.storage import StorageConfig, ValkeyConfig
 from app.config.storage_type import StorageTypes
 from app.repository.base import BaseRepository
 
@@ -27,12 +25,13 @@ class RepositoryFactory:
     """
 
     @staticmethod
-    def create(config: Union[StorageConfig, ValkeyConfig, BaseModel]) -> BaseRepository:
+    def create(config: StorageConfig | ValkeyConfig | BaseModel) -> BaseRepository:
         """
         Create a repository instance based on the provided storage configuration.
 
         Args:
-            config (Union[StorageConfig, BaseModel]): The configuration object specifying the storage type.
+            config (Union[StorageConfig, BaseModel]): The configuration object specifying
+                the storage type.
 
         Returns:
             BaseRepository: An instance of a repository based on the specified storage type.

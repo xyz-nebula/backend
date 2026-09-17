@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class SmtpTlsMode(str, Enum):
+class SmtpTlsMode(StrEnum):
     """
     How the SMTP mailer secures its connection.
 

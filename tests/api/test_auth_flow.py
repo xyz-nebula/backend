@@ -2,8 +2,9 @@ import pyotp
 from fastapi.testclient import TestClient
 
 from app.database.models import User, UserStatus
-
-from tests.helpers import REGISTER_PAYLOAD, activate as _activate, register as _register
+from tests.helpers import REGISTER_PAYLOAD
+from tests.helpers import activate as _activate
+from tests.helpers import register as _register
 from tests.helpers import register_and_activate as _register_and_activate
 
 
@@ -172,9 +173,7 @@ async def test_refresh_rotates_token(client: TestClient, fake_mailer):
 
 async def test_logout_requires_bearer_token(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
-    response = client.post(
-        "/v1/auth/logout", json={"refresh_token": tokens["refresh_token"]}
-    )
+    response = client.post("/v1/auth/logout", json={"refresh_token": tokens["refresh_token"]})
     assert response.status_code == 401
     assert response.json()["code"] == "missing_token"
 
