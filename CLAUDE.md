@@ -11,6 +11,27 @@ FastAPI backend for the Nebula project. Python 3.14+, managed with `uv`.
 - **aiosmtplib** — activation email delivery (prod); logs the link instead in dev (`MAILER_TYPE`)
 - **Pydantic Settings** — config from `.env`
 
+## Commands
+
+All commands run through `just` (Justfile), which handles `uv sync` for you:
+
+```bash
+just lint         # ruff check
+just fmt          # ruff format (writes changes)
+just fmt-check    # ruff format --check
+just typecheck    # ty check
+just test         # pytest -q
+just check        # lint + fmt-check + typecheck + test (what CI runs, as separate jobs)
+```
+
+Run a single test with `uv run pytest <path>::<test_name>`, e.g.:
+```bash
+uv run pytest tests/api/test_auth_flow.py::test_register_success -q
+```
+
+Tests don't need Postgres/Valkey running — `tests/conftest.py` overrides `DB_URL` to a
+temp SQLite file and the `memory` `LocalRepository` backend is used via fixtures.
+
 ## Setup
 
 1. Copy `.env.example` to `.env` and fill in values:
