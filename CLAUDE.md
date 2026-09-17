@@ -5,9 +5,10 @@ FastAPI backend for the Nebula project. Python 3.14+, managed with `uv`.
 ## Stack
 
 - **FastAPI** + **Uvicorn** — web framework
-- **Tortoise ORM** — async database ORM (models not yet implemented)
-- **PyJWT** — JWT auth
-- **Valkey** (Redis-compatible) — token/session storage
+- **Tortoise ORM** + **Postgres** — async database ORM (`User` model implemented; see `app/database/models.py`)
+- **PyJWT** — JWT auth (access tokens only — refresh tokens are opaque, stored in Valkey)
+- **Valkey** (Redis-compatible) — token/session storage: activation codes and refresh tokens, both TTL-based
+- **aiosmtplib** — activation email delivery (prod); logs the link instead in dev (`MAILER_TYPE`)
 - **Pydantic Settings** — config from `.env`
 
 ## Setup
@@ -61,24 +62,35 @@ docker stop valkey && docker rm valkey
 
 ```
 app/
-├── api/v1/routers/     # Route handlers (auth.py is a placeholder)
-├── config/             # Pydantic Settings, StorageTypes enum, ValkeyConfig
-├── database/           # Tortoise ORM models and actions (not yet implemented)
+├── api/v1/routers/     # Route handlers — auth.py implements the openapi.yaml auth API
+├── config/             # Pydantic Settings, StorageTypes/MailerType enums, ValkeyConfig
+├── database/           # User model (Tortoise) + query/mutation helpers in actions.py
 ├── dependencies.py     # FastAPI Depends() for Bearer token extraction
-├── middleware/         # JWTAuthenticationMiddleware
+├── exceptions.py        # ApiException + handlers -> {code, message, field} error envelope
+├── middleware/         # JWTAuthenticationMiddleware (see note below)
 ├── repository/         # BaseRepository, LocalRepository, ValkeyRepository, RepositoryFactory
-├── services/           # JWTService (decode/validate tokens)
-└── utils/              # time_helpers (cast_to_seconds)
+├── services/           # JWTService (encode/decode), AuthService (register/activate/login/
+│                        # refresh/logout), mailer.py (ActivationMailer: SMTP prod / log dev)
+└── utils/              # time_helpers (cast_to_seconds), password (bcrypt hash/verify)
 ```
 
 ## Auth flow
 
-- `JWTAuthenticationMiddleware` extracts the Bearer token from the `Authorization` header,
-  validates it via `JWTService`, and stores the decoded payload in `scope["state"]["user"]`.
-- `dependencies.py` provides `get_current_token_payload()` as a FastAPI `Depends()` for
-  protecting individual routes.
-- **Note:** the middleware currently has no excluded paths — public routes (login, register)
-  must be added to a bypass list before the middleware is wired up.
+Implements `openapi.yaml` (register → email activation → login → refresh → logout).
+See `app/services/AuthService.py` for the full flow. Key points:
+- Access tokens are short-lived JWTs (`JWTService`, HS256, never revoked server-side).
+  Refresh tokens are opaque (`secrets.token_urlsafe`), stored in Valkey as
+  `refresh:{token} -> user_uuid` with a TTL, and rotated (old one deleted) on every use.
+- Activation codes are opaque UUIDs stored in Valkey as `activation:{code} -> user_uuid`
+  with a TTL — there's no separate Postgres table for them or for refresh tokens, since
+  Valkey already covers ephemeral, TTL-based storage.
+- `dependencies.py` provides `get_current_token_payload()` as a FastAPI `Depends()`,
+  used to protect `logout` (the only endpoint in this API that requires a bearer token).
+- **Note:** `JWTAuthenticationMiddleware` is still unwired and has no path-exclusion
+  support — the auth router relies on `get_current_token_payload()` per-route instead.
+- MFA/TOTP: `User.mfa_enabled`/`mfa_secret` exist and `login` checks them, but there's no
+  enrollment endpoint yet, so `mfa_enabled` is always `False` in practice.
+- Rate limiting (429s in the spec) is not implemented yet.
 
 ## Storage backends
 

@@ -1,18 +1,52 @@
-from pydantic import BaseModel, Field
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
+
+from app.database.models import UserStatus
 
 
-class UserLogin(BaseModel):
-    access_token: str = Field(..., description="JWT access token")
-    refresh_token: str = Field(..., description="JWT refresh token")
+class AuthRegisterRequest(BaseModel):
+    email: EmailStr = Field(..., max_length=254)
+    username: str = Field(..., min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_.-]+$")
+    first_name: str = Field(..., min_length=1, max_length=64)
+    last_name: str = Field(..., min_length=1, max_length=64)
+    password: str = Field(..., min_length=8, max_length=128)
 
 
-class UserRegister(BaseModel):
-    email: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=4)
-    timezone: str | None = Field(None, description="User's timezone in IANA format (e.g., 'America/New_York')")
+class AuthRegisterResponse(BaseModel):
+    user_id: UUID
+    status: UserStatus = UserStatus.PENDING_ACTIVATION
+
+
+class AuthLoginRequest(BaseModel):
+    email: EmailStr = Field(..., max_length=254)
+    password: str = Field(..., min_length=8, max_length=128)
+    totp_token: str | None = Field(default=None, pattern=r"^[0-9]{6}$")
+
+
+class AuthActivationRequest(BaseModel):
+    code: UUID
+
+
+class AuthRefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class AuthLogoutRequest(BaseModel):
+    refresh_token: str
+
+
+class AuthTokens(BaseModel):
+    access_token: str
+    refresh_token: str
 
 
 __all__ = [
-    "UserLogin", 
-    "UserRegister",
+    "AuthRegisterRequest",
+    "AuthRegisterResponse",
+    "AuthLoginRequest",
+    "AuthActivationRequest",
+    "AuthRefreshRequest",
+    "AuthLogoutRequest",
+    "AuthTokens",
 ]
