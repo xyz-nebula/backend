@@ -1,0 +1,50 @@
+services:
+  app:
+    image: ghcr.io/astral-sh/uv:alpine
+    container_name: nebula-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - app_venv:/app/.venv
+      - uv_cache:/root/.local/share/uv
+    environment:
+      - DEBUG=true
+      - VALKEY_HOST=valkey
+      - DB_URL=postgres://nebula:nebula@postgres:5432/nebula
+      - UV_LINK_MODE=copy
+    command: "sh -c 'cd /app && uv run --dev nebula-backend'"
+    depends_on:
+      valkey:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: nebula-valkey
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: nebula-postgres
+    environment:
+      - POSTGRES_USER=nebula
+      - POSTGRES_PASSWORD=nebula
+      - POSTGRES_DB=nebula
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nebula"]
+      interval: 5s
+
+volumes:
+  app_venv:
+  uv_cache:
+  postgres_data:

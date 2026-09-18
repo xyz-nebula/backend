@@ -5,7 +5,73 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "aiosmtplib>=3.0.2",
+    "asyncpg>=0.30.0",
+    "bcrypt>=5.0.0",
+    "coloredlogs>=15.0.1",
+    "email-validator>=2.2.0",
     "fastapi>=0.141.1",
-    "tortoise-orm>=1.1.8",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.14.0",
+    "pyotp>=2.9.0",
+    "starlette>=1.6.0",
+    "tortoise-orm[asyncpg]>=1.1.8",
+    "tzdata>=2025.2",
+    "uvicorn>=0.53.0",
     "valkey>=6.1.1",
+]
+[project.scripts]
+nebula-backend = "app:main"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.0",
+    "ruff>=0.9.0",
+    "ty>=0.0.1a1",
+]
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Depends()/Query()/etc. are meant to be called in argument defaults —
+# that's how the framework's dependency injection works, not a bug.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Security",
+]
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.src]
+include = ["app", "tests"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    # Expected: TestClient dispatches requests on a separate thread/event loop, and
+    # Tortoise reconnects (harmlessly, since the test DB is file-backed) when that happens.
+    "ignore::tortoise.warnings.TortoiseLoopSwitchWarning",
+    # Expected: the test JWT secret is short on purpose, no need for production-grade entropy.
+    "ignore::jwt.warnings.InsecureKeyLengthWarning",
 ]
