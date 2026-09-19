@@ -115,7 +115,7 @@ class AuthService:
             if not totp_token:
                 raise ApiException(401, "mfa_required", "TOTP token is required")
             assert user.mfa_secret is not None, "mfa_enabled implies mfa_secret is set"
-            if not pyotp.TOTP(user.mfa_secret).verify(totp_token):
+            if not pyotp.TOTP(user.mfa_secret).verify(totp_token, valid_window=1):
                 raise ApiException(401, "invalid_credentials", "Invalid TOTP token")
 
         return await self._issue_tokens(user)
@@ -153,7 +153,7 @@ class AuthService:
             raise ApiException(409, "mfa_already_enabled", "TOTP is already enabled")
         if not user.mfa_secret:
             raise ApiException(400, "totp_not_enrolled", "Start TOTP enrollment first")
-        if not pyotp.TOTP(user.mfa_secret).verify(totp_token):
+        if not pyotp.TOTP(user.mfa_secret).verify(totp_token, valid_window=1):
             raise ApiException(401, "invalid_totp_token", "Invalid TOTP token")
 
         await enable_mfa(user)
