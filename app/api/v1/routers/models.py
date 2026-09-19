@@ -1,8 +1,9 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.database.models import UserStatus
+from app.database.models import ChatStatus, UserStatus
 
 
 class AuthRegisterRequest(BaseModel):
@@ -54,6 +55,38 @@ class TotpDisableRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
 
 
+class ChatCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+
+class MessageResponse(BaseModel):
+    uuid: UUID
+    sequence: int
+    is_ai: bool
+    text: str
+    created_at: datetime
+
+
+class ChatResponse(BaseModel):
+    uuid: UUID
+    name: str
+    status: ChatStatus
+    created_at: datetime
+
+
+class ChatWithMessagesResponse(ChatResponse):
+    messages: list[MessageResponse]
+
+
+class ChatActivateRequest(BaseModel):
+    uuid: UUID
+
+
+class MessageCreateRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    is_ai: bool = False
+
+
 __all__ = [
     "AuthRegisterRequest",
     "AuthRegisterResponse",
@@ -65,4 +98,10 @@ __all__ = [
     "TotpEnrollResponse",
     "TotpConfirmRequest",
     "TotpDisableRequest",
+    "ChatCreateRequest",
+    "ChatResponse",
+    "ChatWithMessagesResponse",
+    "ChatActivateRequest",
+    "MessageResponse",
+    "MessageCreateRequest",
 ]
