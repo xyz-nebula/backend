@@ -24,7 +24,7 @@ class LogActivationMailer(ActivationMailer):
 
     async def send_activation_link(self, *, email: str, code: str) -> None:
         link = self._config.activation_link_base_url.format(code=code)
-        logger.info("Activation link for %s: %s", email)
+        logger.info("Activation link for %s: %s", email, link)
 
 
 class SMTPActivationMailer(ActivationMailer):
