@@ -33,4 +33,43 @@ class User(Model):
         return f"User({self.uuid}, {self.email})"
 
 
-__all__ = ["User", "UserStatus"]
+class ChatStatus(StrEnum):
+    VICTORY = "victory"
+    DEFEAT = "defeat"
+    ONGOING = "ongoing"
+
+
+class Chat(Model):
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    name = fields.CharField(max_length=100)
+    user = fields.ForeignKeyField("models.User", related_name="chats")
+    status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
+
+    class Meta:
+        table = "chat"
+
+    def __str__(self) -> str:
+        return f"Chat({self.uuid}, {self.name})"
+
+
+class Message(Model):
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    sequence = fields.IntField()
+    is_ai = fields.BooleanField(default=False)
+
+    text = fields.TextField()
+    chat = fields.ForeignKeyField("models.Chat", related_name="messages")
+
+    class Meta:
+        table = "message"
+
+    def __str__(self) -> str:
+        return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
+
+
+__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message"]
