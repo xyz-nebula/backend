@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     valkey_db: int = 0
 
     port: int = 3000
+    root_path: str = "/"
     debug: bool = False
     log_level: str = "INFO"
     db_url: str = "sqlite://db.sqlite3"
