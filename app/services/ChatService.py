@@ -9,6 +9,8 @@ from app.database.actions import (
     get_message_by_uuid_for_chat,
     get_messages_by_chat,
     get_user_by_uuid,
+    create_feedback,
+    create_judgement
 )
 from app.database.models import Chat, Message, User
 from app.exceptions import ApiException
@@ -59,6 +61,12 @@ class ChatService:
     async def delete_message(self, user_uuid: str, chat_uuid: str, message_uuid: str) -> None:
         message = await self.get_message(user_uuid, chat_uuid, message_uuid)
         await delete_message(message)
+
+    async def create_feedback(self, session_uuid: str, text: str):
+        return await create_feedback(session_uuid=session_uuid, text=text)
+
+    async def create_judgement(self, session_uuid: str, text: str):
+        return await create_judgement(session_uuid=session_uuid, text=text)
 
     async def _require_user(self, user_uuid: str) -> User:
         user = await get_user_by_uuid(user_uuid)

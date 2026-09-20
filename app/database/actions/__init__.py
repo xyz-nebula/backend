@@ -1,4 +1,10 @@
-from app.database.actions.chat import create_chat, delete_chat, get_chat_by_uuid_for_user
+from app.database.actions.chat import (
+    create_chat, 
+    delete_chat, 
+    get_chat_by_uuid_for_user,
+    create_feedback,
+    create_judgement,
+)
 from app.database.actions.message import (
     create_message,
     delete_message,
@@ -34,4 +40,6 @@ __all__ = [
     "get_messages_by_chat",
     "get_message_by_uuid_for_chat",
     "delete_message",
+    "create_feedback",
+    "create_judgement",
 ]
