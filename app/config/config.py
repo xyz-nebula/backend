@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     db_url: str = "sqlite://db.sqlite3"
 
     activation_code_expire_minutes: int = 60
-    activation_link_base_url: str = "http://localhost:5173/activate?code={code}"
+    activation_link_base_url: str = "http://example.com/activate?code={code}"
 
     mailer_type: MailerType = MailerType.LOG
     smtp_host: str | None = None
