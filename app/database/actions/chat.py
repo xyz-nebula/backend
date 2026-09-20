@@ -15,16 +15,21 @@ async def delete_chat(chat: Chat) -> None:
     await chat.delete()
 
 
-__all__ = [
-    "create_chat",
-    "get_chat_by_uuid_for_user",
-    "delete_chat",
-]
-
-
 async def create_feedback(*, session_uuid: UUID | str, text: str) -> Feedback:
     return await Feedback.create(session_uuid=session_uuid, text=text)
 
 
 async def create_judgement(*, session_uuid: UUID | str, text: str) -> Judgement:
     return await Judgement.create(session_uuid=session_uuid, text=text)
+
+
+__all__ = [
+    "create_chat",
+    "get_chat_by_uuid_for_user",
+    "delete_chat",
+    "create_feedback",
+    "create_judgement",
+]
+
+
+
