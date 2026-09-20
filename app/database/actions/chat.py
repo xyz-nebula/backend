@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.database.models import Chat, User
+from app.database.models import Chat, User, Judgement, Feedback
 
 
 async def create_chat(*, user: User, name: str) -> Chat:
@@ -20,3 +20,11 @@ __all__ = [
     "get_chat_by_uuid_for_user",
     "delete_chat",
 ]
+
+
+async def create_feedback(*, session_uuid: UUID | str, text: str) -> Feedback:
+    return await Feedback.create(session_uuid=session_uuid, text=text)
+
+
+async def create_judgement(*, session_uuid: UUID | str, text: str) -> Judgement:
+    return await Judgement.create(session_uuid=session_uuid, text=text)
