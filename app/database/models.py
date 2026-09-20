@@ -73,6 +73,14 @@ class Chat(Model):
 
 
 class Feedback(Model):
+    """
+    Feedback:
+        - id (INT, PK)
+        - uuid (UUID, UK)
+        - created_at (DATETIME)
+        - session_uuid (UUID, FK)
+        - text (TEXT)
+    """
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -88,6 +96,14 @@ class Feedback(Model):
 
 
 class Judgement(Model):
+    """
+    Judgement:
+        - id (INT, PK)
+        - uuid (UUID, UK)
+        - created_at (DATETIME)
+        - session_uuid (UUID, FK)
+        - text (TEXT)
+    """
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
     created_at = fields.DatetimeField(auto_now_add=True)
