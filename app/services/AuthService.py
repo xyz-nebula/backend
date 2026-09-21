@@ -13,6 +13,8 @@ from app.database.actions import (
     enable_mfa,
     get_user_by_email,
     get_user_by_username,
+    check_user_activation_by_email,
+    check_user_activation_by_username,
     get_user_by_uuid,
     set_mfa_secret,
 )
@@ -50,19 +52,25 @@ class AuthService:
         last_name: str,
         password: str,
     ) -> User:
-        if await get_user_by_email(email) is not None:
+        user_exists = bool(await get_user_by_email(email) or await get_user_by_username(username))
+        user_activated = await check_user_activation_by_email(email) or await check_user_activation_by_username(username)
+
+        if user_exists is True and user_activated is True:
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
-        if await get_user_by_username(username) is not None:
+        if user_exists is True and user_activated is True:
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
-        user = await create_user(
-            email=email,
-            username=username,
-            firstname=first_name,
-            lastname=last_name,
-            hashed_password=hash_password(password),
-        )
-
+        if user_exists is False and user_activated is False:
+            user = await create_user(
+                email=email,
+                username=username,
+                firstname=first_name,
+                lastname=last_name,
+                hashed_password=hash_password(password),
+            )
+        else:
+            user = await get_user_by_email(email) or await get_user_by_username(username)
+    
         code = str(uuid4())
         await self._tokens.set(
             f"{_ACTIVATION_KEY_PREFIX}{code}",
@@ -72,6 +80,7 @@ class AuthService:
         await self._mailer.send_activation_link(email=user.email, code=code)
 
         return user
+
 
     async def activate(self, code: str) -> tuple[str, str]:
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"
