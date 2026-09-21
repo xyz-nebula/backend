@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.database.models import Chat, User, Judgement, Feedback
+from app.database.models import Chat, Feedback, Judgement, User
 
 
 async def create_chat(*, user: User, name: str) -> Chat:
