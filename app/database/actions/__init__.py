@@ -50,7 +50,6 @@ __all__ = [
     "delete_message",
     "create_feedback",
     "create_judgement",
-    "check_user_activation",
     "check_user_activation_by_email",
     "check_user_activation_by_username",
 ]
