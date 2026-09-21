@@ -2,6 +2,8 @@ from fastapi import Depends
 
 from app.database.actions import (
     create_chat,
+    create_feedback,
+    create_judgement,
     create_message,
     delete_chat,
     delete_message,
@@ -9,8 +11,6 @@ from app.database.actions import (
     get_message_by_uuid_for_chat,
     get_messages_by_chat,
     get_user_by_uuid,
-    create_feedback,
-    create_judgement
 )
 from app.database.models import Chat, Message, User
 from app.exceptions import ApiException
