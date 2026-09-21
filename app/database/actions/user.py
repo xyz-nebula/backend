@@ -30,6 +30,7 @@ async def create_user(
     firstname: str,
     lastname: str,
     hashed_password: str,
+    status: UserStatus = UserStatus.ACTIVE,
 ) -> User:
     return await User.create(
         email=email,
@@ -37,7 +38,7 @@ async def create_user(
         firstname=firstname,
         lastname=lastname,
         password=hashed_password,
-        status=UserStatus.PENDING_ACTIVATION,
+        status=status,
     )
 
 

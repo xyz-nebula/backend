@@ -15,7 +15,6 @@ class AuthRegisterRequest(BaseModel):
 
 
 class AuthRegisterResponse(BaseModel):
-    user_id: UUID
     status: UserStatus = UserStatus.PENDING_ACTIVATION
 
 
