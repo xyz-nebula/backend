@@ -11,14 +11,15 @@ from tests.helpers import register_and_activate as _register_and_activate
 async def test_register_success(client: TestClient, fake_mailer):
     body = _register(client)
     assert body["status"] == "pending_activation"
+    assert body["user_id"]
     assert len(fake_mailer.sent) == 1
     email, code = fake_mailer.sent[0]
     assert email == REGISTER_PAYLOAD["email"]
     assert code
 
 
-async def test_register_duplicate_email_conflicts(client: TestClient, fake_mailer):
-    _register(client)
+async def test_register_duplicate_email_after_activation_conflicts(client: TestClient, fake_mailer):
+    _register_and_activate(client, fake_mailer)
     response = client.post(
         "/v1/auth/register",
         json={**REGISTER_PAYLOAD, "username": "otheruser"},
@@ -27,14 +28,72 @@ async def test_register_duplicate_email_conflicts(client: TestClient, fake_maile
     assert response.json()["code"] == "email_taken"
 
 
-async def test_register_duplicate_username_conflicts(client: TestClient, fake_mailer):
-    _register(client)
+async def test_register_duplicate_username_after_activation_conflicts(
+    client: TestClient, fake_mailer
+):
+    _register_and_activate(client, fake_mailer)
     response = client.post(
         "/v1/auth/register",
         json={**REGISTER_PAYLOAD, "email": "other@example.com"},
     )
     assert response.status_code == 409
     assert response.json()["code"] == "username_taken"
+
+
+async def test_register_duplicate_pending_email_resends_code(client: TestClient, fake_mailer):
+    _register(client)
+    first_code = fake_mailer.sent[0][1]
+
+    _register(client)  # same email, same username — resend
+    assert len(fake_mailer.sent) == 2
+    new_code = fake_mailer.sent[1][1]
+    assert new_code != first_code
+
+    # old code is now invalid
+    response = client.post("/v1/auth/register/activate", json={"code": first_code})
+    assert response.status_code == 404
+
+    # new code works
+    tokens = client.post("/v1/auth/register/activate", json={"code": new_code})
+    assert tokens.status_code == 200
+
+
+async def test_register_pending_email_with_other_username_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    code = fake_mailer.sent[0][1]
+
+    response = client.post("/v1/auth/register", json={**REGISTER_PAYLOAD, "username": "otheruser"})
+    assert response.status_code == 409
+    assert response.json()["code"] == "email_taken"
+    assert len(fake_mailer.sent) == 1
+    assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
+
+
+async def test_register_pending_username_with_other_email_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    code = fake_mailer.sent[0][1]
+
+    response = client.post(
+        "/v1/auth/register", json={**REGISTER_PAYLOAD, "email": "other@example.com"}
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == "username_taken"
+    assert len(fake_mailer.sent) == 1
+    assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
+
+
+async def test_register_crossed_pending_pairs_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    other = {**REGISTER_PAYLOAD, "email": "other@example.com", "username": "otheruser"}
+    assert client.post("/v1/auth/register", json=other).status_code == 200
+    code_a, code_b = fake_mailer.sent[0][1], fake_mailer.sent[1][1]
+
+    response = client.post(
+        "/v1/auth/register", json={**REGISTER_PAYLOAD, "username": other["username"]}
+    )
+    assert response.status_code == 409
+    for code in (code_a, code_b):
+        assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
 
 
 async def test_register_validation_error(client: TestClient):
@@ -76,14 +135,15 @@ async def test_activate_code_cannot_be_reused(client: TestClient, fake_mailer):
     assert response.status_code == 404
 
 
-async def test_login_before_activation_forbidden(client: TestClient, fake_mailer):
+async def test_login_before_activation_forbidden(client: TestClient):
     _register(client)
     response = client.post(
         "/v1/auth/login",
         json={"email": REGISTER_PAYLOAD["email"], "password": REGISTER_PAYLOAD["password"]},
     )
-    assert response.status_code == 403
-    assert response.json()["code"] == "account_not_activated"
+    # User doesn't exist in Postgres yet (pending activation lives in Valkey only)
+    assert response.status_code == 401
+    assert response.json()["code"] == "invalid_credentials"
 
 
 async def test_login_suspended_user_forbidden(client: TestClient, fake_mailer):

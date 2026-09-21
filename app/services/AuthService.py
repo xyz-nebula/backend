@@ -1,13 +1,14 @@
+import json
 import secrets
 from datetime import timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pyotp
 from fastapi import Depends
+from tortoise.exceptions import IntegrityError
 
 from app.config.config import Settings, settings
 from app.database.actions import (
-    activate_user,
     create_user,
     disable_mfa,
     enable_mfa,
@@ -25,6 +26,8 @@ from app.services.mailer import ActivationMailer, get_activation_mailer
 from app.utils.password import hash_password, verify_password
 
 _ACTIVATION_KEY_PREFIX = "activation:"
+_PENDING_EMAIL_KEY_PREFIX = "pending_email:"
+_PENDING_USERNAME_KEY_PREFIX = "pending_username:"
 _REFRESH_KEY_PREFIX = "refresh:"
 
 
@@ -49,46 +52,75 @@ class AuthService:
         first_name: str,
         last_name: str,
         password: str,
-    ) -> User:
-        if await get_user_by_email(email) is not None:
+    ) -> UUID:
+        if await get_user_by_email(email):
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
-        if await get_user_by_username(username) is not None:
+        if await get_user_by_username(username):
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
-        user = await create_user(
-            email=email,
-            username=username,
-            firstname=first_name,
-            lastname=last_name,
-            hashed_password=hash_password(password),
-        )
+        email_code = await self._tokens.get(f"{_PENDING_EMAIL_KEY_PREFIX}{email}")
+        username_code = await self._tokens.get(f"{_PENDING_USERNAME_KEY_PREFIX}{username}")
+        if email_code and email_code == username_code:
+            # Same (email, username) pair: wipe the old pending so this acts as a resend
+            await self._cleanup_pending(email_code)
+        elif email_code:
+            raise ApiException(409, "email_taken", "Email is already registered", field="email")
+        elif username_code:
+            raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
+        ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
         code = str(uuid4())
-        await self._tokens.set(
-            f"{_ACTIVATION_KEY_PREFIX}{code}",
-            str(user.uuid),
-            expiration=timedelta(minutes=self._config.activation_code_expire_minutes),
+        user_id = uuid4()
+        pending_data = json.dumps(
+            {
+                "user_id": str(user_id),
+                "email": email,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "hashed_password": hash_password(password),
+            }
         )
-        await self._mailer.send_activation_link(email=user.email, code=code)
+        await self._tokens.set(f"{_ACTIVATION_KEY_PREFIX}{code}", pending_data, expiration=ttl)
+        await self._tokens.set(f"{_PENDING_EMAIL_KEY_PREFIX}{email}", code, expiration=ttl)
+        await self._tokens.set(f"{_PENDING_USERNAME_KEY_PREFIX}{username}", code, expiration=ttl)
+        await self._mailer.send_activation_link(email=email, code=code)
+        return user_id
 
-        return user
+    async def _cleanup_pending(self, code: str) -> None:
+        raw = await self._tokens.get(f"{_ACTIVATION_KEY_PREFIX}{code}")
+        if raw:
+            data = json.loads(raw)
+            await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
+            await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
+            await self._tokens.delete(f"{_ACTIVATION_KEY_PREFIX}{code}")
 
     async def activate(self, code: str) -> tuple[str, str]:
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"
-        user_uuid = await self._tokens.get(key)
-        if user_uuid is None:
+        raw = await self._tokens.get(key)
+        if raw is None:
             raise ApiException(
                 404, "activation_code_not_found", "Activation code not found or expired"
             )
 
-        user = await get_user_by_uuid(user_uuid)
-        if user is None:
-            raise ApiException(
-                404, "activation_code_not_found", "Activation code not found or expired"
+        data = json.loads(raw)
+        try:
+            user = await create_user(
+                user_id=UUID(data["user_id"]),
+                email=data["email"],
+                username=data["username"],
+                firstname=data["first_name"],
+                lastname=data["last_name"],
+                hashed_password=data["hashed_password"],
+                status=UserStatus.ACTIVE,
             )
-
-        await activate_user(user)
+        except IntegrityError:
+            raise ApiException(
+                409, "account_conflict", "Email or username is already registered"
+            ) from None
         await self._tokens.delete(key)
+        await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
+        await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
 
         return await self._issue_tokens(user)
 

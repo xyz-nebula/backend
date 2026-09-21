@@ -29,14 +29,14 @@ async def register(
     body: AuthRegisterRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> AuthRegisterResponse:
-    user = await auth_service.register(
+    user_id = await auth_service.register(
         email=body.email,
         username=body.username,
         first_name=body.first_name,
         last_name=body.last_name,
         password=body.password,
     )
-    return AuthRegisterResponse(user_id=user.uuid, status=user.status)
+    return AuthRegisterResponse(user_id=user_id)
 
 
 @public_router.post("/register/activate", response_model=AuthTokens)
