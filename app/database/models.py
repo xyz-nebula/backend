@@ -55,6 +55,54 @@ class Chat(Model):
         return f"Chat({self.uuid}, {self.name})"
 
 
+class Feedback(Model):
+    """
+    Feedback:
+        - id (INT, PK)
+        - uuid (UUID, UK)
+        - created_at (DATETIME)
+        - session_uuid (UUID, FK)
+        - text (TEXT)
+    """
+
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    session_uuid = fields.UUIDField()
+    text = fields.TextField()
+
+    class Meta:
+        table = "feedback"
+
+    def __str__(self) -> str:
+        return f"Feedback({self.uuid}, {self.text[:20]}...)"
+
+
+class Judgement(Model):
+    """
+    Judgement:
+        - id (INT, PK)
+        - uuid (UUID, UK)
+        - created_at (DATETIME)
+        - session_uuid (UUID, FK)
+        - text (TEXT)
+    """
+
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    session_uuid = fields.UUIDField()
+    text = fields.TextField()
+
+    class Meta:
+        table = "judgement"
+
+    def __str__(self) -> str:
+        return f"Judgement({self.uuid}, {self.text[:20]}...)"
+
+
 class Message(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
