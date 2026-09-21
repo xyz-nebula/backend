@@ -8,14 +8,16 @@ from fastapi import Depends
 from app.config.config import Settings, settings
 from app.database.actions import (
     activate_user,
+    check_user_activation_by_email,
+    check_user_activation_by_username,
     create_user,
     disable_mfa,
     enable_mfa,
     get_user_by_email,
     get_user_by_username,
-    check_user_activation_by_email,
-    check_user_activation_by_username,
     get_user_by_uuid,
+    require_user_by_email,
+    require_user_by_username,
     set_mfa_secret,
 )
 from app.database.models import User, UserStatus
@@ -53,7 +55,9 @@ class AuthService:
         password: str,
     ) -> User:
         user_exists = bool(await get_user_by_email(email) or await get_user_by_username(username))
-        user_activated = await check_user_activation_by_email(email) or await check_user_activation_by_username(username)
+        user_activated = await check_user_activation_by_email(
+            email
+        ) or await check_user_activation_by_username(username)
 
         if user_exists and user_activated:
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
@@ -61,8 +65,13 @@ class AuthService:
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         if user_exists and not user_activated:
-            # There might be a vulnerability here if the user is able to register with the same email or username and get a new activation code. This could be exploited to bypass the activation process. Consider adding additional checks or restrictions to prevent this like password verification or a cooldown period before allowing re-registration.
-            user = await get_user_by_email(email) or await get_user_by_username(username)
+            # There might be a vulnerability here
+            # if the user is able to register with the same email or username
+            # and get a new activation code.
+            # This could be exploited to bypass the activation process.
+            # We should add checks or restrictions to prevent this like
+            # password verification or a cooldown period before allowing re-registration.
+            user = await require_user_by_email(email) or await require_user_by_username(username)
         else:
             user = await create_user(
                 email=email,
@@ -71,7 +80,7 @@ class AuthService:
                 lastname=last_name,
                 hashed_password=hash_password(password),
             )
-    
+
         code = str(uuid4())
         await self._tokens.set(
             f"{_ACTIVATION_KEY_PREFIX}{code}",
@@ -81,7 +90,6 @@ class AuthService:
         await self._mailer.send_activation_link(email=user.email, code=code)
 
         return user
-
 
     async def activate(self, code: str) -> tuple[str, str]:
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"

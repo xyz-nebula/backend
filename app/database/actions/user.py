@@ -3,6 +3,14 @@ from uuid import UUID
 from app.database.models import User, UserStatus
 
 
+async def require_user_by_email(email: str) -> User:
+    return await User.get(email=email)
+
+
+async def require_user_by_username(username: str) -> User:
+    return await User.get(username=username)
+
+
 async def get_user_by_email(email: str) -> User | None:
     return await User.get_or_none(email=email)
 

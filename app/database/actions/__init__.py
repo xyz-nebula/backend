@@ -13,21 +13,25 @@ from app.database.actions.message import (
 )
 from app.database.actions.user import (
     activate_user,
+    check_user_activation_by_email,
+    check_user_activation_by_username,
     create_user,
-    update_user,
     disable_mfa,
     enable_mfa,
     get_user_by_email,
     get_user_by_username,
     get_user_by_uuid,
+    require_user_by_email,
+    require_user_by_username,
     set_mfa_secret,
     set_password,
-    check_user_activation_by_email,
-    check_user_activation_by_username,
+    update_user,
 )
 
 __all__ = [
     "get_user_by_email",
+    "require_user_by_email",
+    "require_user_by_username",
     "get_user_by_username",
     "get_user_by_uuid",
     "create_user",
