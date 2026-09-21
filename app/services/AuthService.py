@@ -55,12 +55,15 @@ class AuthService:
         user_exists = bool(await get_user_by_email(email) or await get_user_by_username(username))
         user_activated = await check_user_activation_by_email(email) or await check_user_activation_by_username(username)
 
-        if user_exists is True and user_activated is True:
+        if user_exists and user_activated:
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
-        if user_exists is True and user_activated is True:
+        if user_exists and user_activated:
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
-        if user_exists is False and user_activated is False:
+        if user_exists and not user_activated:
+            # There might be a vulnerability here if the user is able to register with the same email or username and get a new activation code. This could be exploited to bypass the activation process. Consider adding additional checks or restrictions to prevent this like password verification or a cooldown period before allowing re-registration.
+            user = await get_user_by_email(email) or await get_user_by_username(username)
+        else:
             user = await create_user(
                 email=email,
                 username=username,
@@ -68,8 +71,6 @@ class AuthService:
                 lastname=last_name,
                 hashed_password=hash_password(password),
             )
-        else:
-            user = await get_user_by_email(email) or await get_user_by_username(username)
     
         code = str(uuid4())
         await self._tokens.set(
