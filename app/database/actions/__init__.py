@@ -14,6 +14,7 @@ from app.database.actions.message import (
 from app.database.actions.user import (
     activate_user,
     create_user,
+    update_user,
     disable_mfa,
     enable_mfa,
     get_user_by_email,
@@ -21,6 +22,8 @@ from app.database.actions.user import (
     get_user_by_uuid,
     set_mfa_secret,
     set_password,
+    check_user_activation_by_email,
+    check_user_activation_by_username,
 )
 
 __all__ = [
@@ -28,6 +31,7 @@ __all__ = [
     "get_user_by_username",
     "get_user_by_uuid",
     "create_user",
+    "update_user",
     "activate_user",
     "set_password",
     "set_mfa_secret",
@@ -42,4 +46,7 @@ __all__ = [
     "delete_message",
     "create_feedback",
     "create_judgement",
+    "check_user_activation",
+    "check_user_activation_by_email",
+    "check_user_activation_by_username",
 ]

@@ -33,10 +33,42 @@ async def create_user(
     )
 
 
+async def update_user(user: User, **kwargs) -> User:
+    for key, value in kwargs.items():
+        setattr(user, key, value)
+    await user.save()
+    return user
+
+
 async def activate_user(user: User) -> User:
     user.status = UserStatus.ACTIVE
     await user.save(update_fields=["status"])
     return user
+
+
+async def check_user_activation_by_uuid(user_uuid: UUID | str) -> bool:
+    user = await get_user_by_uuid(user_uuid)
+    if user is None:
+        return False
+    if user.status == UserStatus.PENDING_ACTIVATION:
+        return False
+    elif user.status == UserStatus.ACTIVE:
+        return True
+    return False
+
+
+async def check_user_activation_by_email(email: str) -> bool:
+    user = await get_user_by_email(email)
+    if user is None:
+        return False
+    return await check_user_activation_by_uuid(user.uuid)
+
+
+async def check_user_activation_by_username(username: str) -> bool:
+    user = await get_user_by_username(username)
+    if user is None:
+        return False
+    return await check_user_activation_by_uuid(user.uuid)
 
 
 async def set_password(user: User, hashed_password: str) -> User:
