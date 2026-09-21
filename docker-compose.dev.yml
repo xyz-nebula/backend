@@ -50,8 +50,19 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U nebula" ]
       interval: 5s
+  caddy:
+    image: caddy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
   app_venv:
   uv_cache:
   postgres_data:
+  caddy_data:
+  caddy_config:
+
