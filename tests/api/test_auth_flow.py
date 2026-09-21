@@ -11,6 +11,7 @@ from tests.helpers import register_and_activate as _register_and_activate
 async def test_register_success(client: TestClient, fake_mailer):
     body = _register(client)
     assert body["status"] == "pending_activation"
+    assert body["user_id"]
     assert len(fake_mailer.sent) == 1
     email, code = fake_mailer.sent[0]
     assert email == REGISTER_PAYLOAD["email"]
@@ -55,6 +56,44 @@ async def test_register_duplicate_pending_email_resends_code(client: TestClient,
     # new code works
     tokens = client.post("/v1/auth/register/activate", json={"code": new_code})
     assert tokens.status_code == 200
+
+
+async def test_register_pending_email_with_other_username_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    code = fake_mailer.sent[0][1]
+
+    response = client.post("/v1/auth/register", json={**REGISTER_PAYLOAD, "username": "otheruser"})
+    assert response.status_code == 409
+    assert response.json()["code"] == "email_taken"
+    assert len(fake_mailer.sent) == 1
+    assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
+
+
+async def test_register_pending_username_with_other_email_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    code = fake_mailer.sent[0][1]
+
+    response = client.post(
+        "/v1/auth/register", json={**REGISTER_PAYLOAD, "email": "other@example.com"}
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == "username_taken"
+    assert len(fake_mailer.sent) == 1
+    assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
+
+
+async def test_register_crossed_pending_pairs_blocked(client: TestClient, fake_mailer):
+    _register(client)
+    other = {**REGISTER_PAYLOAD, "email": "other@example.com", "username": "otheruser"}
+    assert client.post("/v1/auth/register", json=other).status_code == 200
+    code_a, code_b = fake_mailer.sent[0][1], fake_mailer.sent[1][1]
+
+    response = client.post(
+        "/v1/auth/register", json={**REGISTER_PAYLOAD, "username": other["username"]}
+    )
+    assert response.status_code == 409
+    for code in (code_a, code_b):
+        assert client.post("/v1/auth/register/activate", json={"code": code}).status_code == 200
 
 
 async def test_register_validation_error(client: TestClient):

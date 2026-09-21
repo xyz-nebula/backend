@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 import pyotp
 from fastapi import Depends
+from tortoise.exceptions import IntegrityError
 
 from app.config.config import Settings, settings
 from app.database.actions import (
@@ -57,14 +58,15 @@ class AuthService:
         if await get_user_by_username(username):
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
-        # Clean up stale pending entries so re-registration acts as a resend
-        existing_email_code = await self._tokens.get(f"{_PENDING_EMAIL_KEY_PREFIX}{email}")
-        if existing_email_code:
-            await self._cleanup_pending(existing_email_code)
-
-        existing_username_code = await self._tokens.get(f"{_PENDING_USERNAME_KEY_PREFIX}{username}")
-        if existing_username_code and existing_username_code != existing_email_code:
-            await self._cleanup_pending(existing_username_code)
+        email_code = await self._tokens.get(f"{_PENDING_EMAIL_KEY_PREFIX}{email}")
+        username_code = await self._tokens.get(f"{_PENDING_USERNAME_KEY_PREFIX}{username}")
+        if email_code and email_code == username_code:
+            # Same (email, username) pair: wipe the old pending so this acts as a resend
+            await self._cleanup_pending(email_code)
+        elif email_code:
+            raise ApiException(409, "email_taken", "Email is already registered", field="email")
+        elif username_code:
+            raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
         code = str(uuid4())
@@ -102,15 +104,20 @@ class AuthService:
             )
 
         data = json.loads(raw)
-        user = await create_user(
-            user_id=UUID(data["user_id"]),
-            email=data["email"],
-            username=data["username"],
-            firstname=data["first_name"],
-            lastname=data["last_name"],
-            hashed_password=data["hashed_password"],
-            status=UserStatus.ACTIVE,
-        )
+        try:
+            user = await create_user(
+                user_id=UUID(data["user_id"]),
+                email=data["email"],
+                username=data["username"],
+                firstname=data["first_name"],
+                lastname=data["last_name"],
+                hashed_password=data["hashed_password"],
+                status=UserStatus.ACTIVE,
+            )
+        except IntegrityError:
+            raise ApiException(
+                409, "account_conflict", "Email or username is already registered"
+            ) from None
         await self._tokens.delete(key)
         await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
         await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
