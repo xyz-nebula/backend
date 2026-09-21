@@ -68,13 +68,15 @@ class AuthService:
 
         ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
         code = str(uuid4())
-        pending_data = json.dumps({
-            "email": email,
-            "username": username,
-            "first_name": first_name,
-            "last_name": last_name,
-            "hashed_password": hash_password(password),
-        })
+        pending_data = json.dumps(
+            {
+                "email": email,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "hashed_password": hash_password(password),
+            }
+        )
         await self._tokens.set(f"{_ACTIVATION_KEY_PREFIX}{code}", pending_data, expiration=ttl)
         await self._tokens.set(f"{_PENDING_EMAIL_KEY_PREFIX}{email}", code, expiration=ttl)
         await self._tokens.set(f"{_PENDING_USERNAME_KEY_PREFIX}{username}", code, expiration=ttl)

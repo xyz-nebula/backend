@@ -27,7 +27,9 @@ async def test_register_duplicate_email_after_activation_conflicts(client: TestC
     assert response.json()["code"] == "email_taken"
 
 
-async def test_register_duplicate_username_after_activation_conflicts(client: TestClient, fake_mailer):
+async def test_register_duplicate_username_after_activation_conflicts(
+    client: TestClient, fake_mailer
+):
     _register_and_activate(client, fake_mailer)
     response = client.post(
         "/v1/auth/register",
