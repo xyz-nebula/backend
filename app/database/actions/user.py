@@ -31,8 +31,10 @@ async def create_user(
     lastname: str,
     hashed_password: str,
     status: UserStatus = UserStatus.ACTIVE,
+    user_id: UUID | None = None,
 ) -> User:
     return await User.create(
+        **({"uuid": user_id} if user_id else {}),
         email=email,
         username=username,
         firstname=firstname,

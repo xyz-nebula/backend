@@ -1,7 +1,7 @@
 import json
 import secrets
 from datetime import timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pyotp
 from fastapi import Depends
@@ -51,7 +51,7 @@ class AuthService:
         first_name: str,
         last_name: str,
         password: str,
-    ) -> None:
+    ) -> UUID:
         if await get_user_by_email(email):
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
         if await get_user_by_username(username):
@@ -68,8 +68,10 @@ class AuthService:
 
         ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
         code = str(uuid4())
+        user_id = uuid4()
         pending_data = json.dumps(
             {
+                "user_id": str(user_id),
                 "email": email,
                 "username": username,
                 "first_name": first_name,
@@ -81,6 +83,7 @@ class AuthService:
         await self._tokens.set(f"{_PENDING_EMAIL_KEY_PREFIX}{email}", code, expiration=ttl)
         await self._tokens.set(f"{_PENDING_USERNAME_KEY_PREFIX}{username}", code, expiration=ttl)
         await self._mailer.send_activation_link(email=email, code=code)
+        return user_id
 
     async def _cleanup_pending(self, code: str) -> None:
         raw = await self._tokens.get(f"{_ACTIVATION_KEY_PREFIX}{code}")
@@ -100,6 +103,7 @@ class AuthService:
 
         data = json.loads(raw)
         user = await create_user(
+            user_id=UUID(data["user_id"]),
             email=data["email"],
             username=data["username"],
             firstname=data["first_name"],
