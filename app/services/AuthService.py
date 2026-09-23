@@ -1,4 +1,5 @@
 import json
+import logging
 import secrets
 from datetime import timedelta
 from uuid import UUID, uuid4
@@ -24,6 +25,8 @@ from app.repository.factory import get_token_repository
 from app.services.JWTService import JWTService, get_jwt_service
 from app.services.mailer import ActivationMailer, get_activation_mailer
 from app.utils.password import hash_password, verify_password
+
+logger = logging.getLogger(__name__)
 
 _ACTIVATION_KEY_PREFIX = "activation:"
 _PENDING_EMAIL_KEY_PREFIX = "pending_email:"
@@ -53,19 +56,27 @@ class AuthService:
         last_name: str,
         password: str,
     ) -> UUID:
+        logger.info("Registration attempt for email=%s username=%s", email, username)
         if await get_user_by_email(email):
+            logger.warning("Registration failed: email already registered email=%s", email)
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
         if await get_user_by_username(username):
+            logger.warning("Registration failed: username already taken username=%s", username)
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         email_code = await self._tokens.get(f"{_PENDING_EMAIL_KEY_PREFIX}{email}")
         username_code = await self._tokens.get(f"{_PENDING_USERNAME_KEY_PREFIX}{username}")
         if email_code and email_code == username_code:
             # Same (email, username) pair: wipe the old pending so this acts as a resend
+            logger.info("Resending activation for email=%s username=%s", email, username)
             await self._cleanup_pending(email_code)
         elif email_code:
+            logger.warning("Registration failed: pending email already exists email=%s", email)
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
         elif username_code:
+            logger.warning(
+                "Registration failed: pending username already exists username=%s", username
+            )
             raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
@@ -85,6 +96,7 @@ class AuthService:
         await self._tokens.set(f"{_PENDING_EMAIL_KEY_PREFIX}{email}", code, expiration=ttl)
         await self._tokens.set(f"{_PENDING_USERNAME_KEY_PREFIX}{username}", code, expiration=ttl)
         await self._mailer.send_activation_link(email=email, code=code)
+        logger.info("Registration successful user_id=%s email=%s", user_id, email)
         return user_id
 
     async def _cleanup_pending(self, code: str) -> None:
@@ -96,9 +108,11 @@ class AuthService:
             await self._tokens.delete(f"{_ACTIVATION_KEY_PREFIX}{code}")
 
     async def activate(self, code: str) -> tuple[str, str]:
+        logger.info("Activation attempt code=%s", code)
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"
         raw = await self._tokens.get(key)
         if raw is None:
+            logger.warning("Activation failed: code not found or expired code=%s", code)
             raise ApiException(
                 404, "activation_code_not_found", "Activation code not found or expired"
             )
@@ -115,6 +129,11 @@ class AuthService:
                 status=UserStatus.ACTIVE,
             )
         except IntegrityError:
+            logger.warning(
+                "Activation failed: account conflict email=%s username=%s",
+                data["email"],
+                data["username"],
+            )
             raise ApiException(
                 409, "account_conflict", "Email or username is already registered"
             ) from None
@@ -122,6 +141,7 @@ class AuthService:
         await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
         await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
 
+        logger.info("Account activated user_id=%s email=%s", user.uuid, data["email"])
         return await self._issue_tokens(user)
 
     async def login(
@@ -131,8 +151,10 @@ class AuthService:
         password: str,
         totp_token: str | None,
     ) -> tuple[str, str]:
+        logger.info("Login attempt email=%s", email)
         user = await get_user_by_email(email)
         if user is None or not verify_password(password, user.password):
+            logger.warning("Login failed: invalid credentials email=%s", email)
             raise ApiException(401, "invalid_credentials", "Invalid email or password")
 
         if user.status != UserStatus.ACTIVE:
@@ -141,63 +163,84 @@ class AuthService:
                 if user.status == UserStatus.SUSPENDED
                 else "account_not_activated"
             )
+            logger.warning("Login failed: %s email=%s", code, email)
             raise ApiException(403, code, "Account is not permitted to log in")
 
         if user.mfa_enabled:
             if not totp_token:
+                logger.debug("Login requires MFA email=%s", email)
                 raise ApiException(401, "mfa_required", "TOTP token is required")
             assert user.mfa_secret is not None, "mfa_enabled implies mfa_secret is set"
             if not pyotp.TOTP(user.mfa_secret).verify(totp_token, valid_window=1):
+                logger.warning("Login failed: invalid TOTP token email=%s", email)
                 raise ApiException(401, "invalid_credentials", "Invalid TOTP token")
 
+        logger.info("Login successful user_id=%s", user.uuid)
         return await self._issue_tokens(user)
 
     async def refresh(self, refresh_token: str) -> tuple[str, str]:
+        logger.debug("Token refresh attempt")
         key = f"{_REFRESH_KEY_PREFIX}{refresh_token}"
         user_uuid = await self._tokens.get(key)
         if user_uuid is None:
+            logger.warning("Token refresh failed: invalid or expired refresh token")
             raise ApiException(401, "invalid_token", "Refresh token is invalid or expired")
 
         user = await get_user_by_uuid(user_uuid)
         if user is None:
+            logger.warning("Token refresh failed: user not found user_id=%s", user_uuid)
             raise ApiException(401, "invalid_token", "Refresh token is invalid or expired")
 
         await self._tokens.delete(key)
 
+        logger.info("Token refreshed user_id=%s", user.uuid)
         return await self._issue_tokens(user)
 
     async def logout(self, refresh_token: str) -> None:
+        logger.info("Logout: refresh token revoked")
         await self._tokens.delete(f"{_REFRESH_KEY_PREFIX}{refresh_token}")
 
     async def enroll_totp(self, user_uuid: str) -> tuple[str, str]:
+        logger.info("TOTP enrollment started user_id=%s", user_uuid)
         user = await self._require_user(user_uuid)
         if user.mfa_enabled:
+            logger.warning("TOTP enrollment failed: already enabled user_id=%s", user_uuid)
             raise ApiException(409, "mfa_already_enabled", "TOTP is already enabled")
 
         secret = pyotp.random_base32()
         await set_mfa_secret(user, secret)
         otpauth_url = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="Nebula")
+        logger.info("TOTP secret generated user_id=%s", user_uuid)
         return secret, otpauth_url
 
     async def confirm_totp(self, user_uuid: str, totp_token: str) -> None:
+        logger.info("TOTP confirmation attempt user_id=%s", user_uuid)
         user = await self._require_user(user_uuid)
         if user.mfa_enabled:
+            logger.warning("TOTP confirm failed: already enabled user_id=%s", user_uuid)
             raise ApiException(409, "mfa_already_enabled", "TOTP is already enabled")
         if not user.mfa_secret:
+            logger.warning("TOTP confirm failed: not enrolled user_id=%s", user_uuid)
             raise ApiException(400, "totp_not_enrolled", "Start TOTP enrollment first")
         if not pyotp.TOTP(user.mfa_secret).verify(totp_token, valid_window=1):
+            logger.warning("TOTP confirm failed: invalid token user_id=%s", user_uuid)
             raise ApiException(401, "invalid_totp_token", "Invalid TOTP token")
 
         await enable_mfa(user)
+        logger.info("TOTP enabled user_id=%s", user_uuid)
 
     async def disable_totp(self, user_uuid: str, password: str) -> None:
+        logger.info("TOTP disable attempt user_id=%s", user_uuid)
         user = await self._require_user(user_uuid)
         if not user.mfa_enabled:
+            logger.warning("TOTP disable failed: not enabled user_id=%s", user_uuid)
             raise ApiException(409, "mfa_not_enabled", "TOTP is not enabled")
         if not verify_password(password, user.password):
+            logger.warning("TOTP disable failed: invalid password user_id=%s", user_uuid)
             raise ApiException(401, "invalid_credentials", "Invalid password")
 
         await disable_mfa(user)
+        logger.info("TOTP disabled user_id=%s", user_uuid)
 
     async def _require_user(self, user_uuid: str) -> User:
         user = await get_user_by_uuid(user_uuid)

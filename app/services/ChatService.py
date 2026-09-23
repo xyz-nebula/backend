@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends
 
 from app.database.actions import (
@@ -17,6 +19,8 @@ from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
 
+logger = logging.getLogger(__name__)
+
 _ACTIVE_CHAT_KEY_PREFIX = "active_chat:"
 
 
@@ -26,46 +30,60 @@ class ChatService:
 
     async def create_chat(self, user_uuid: str, name: str) -> Chat:
         user = await self._require_user(user_uuid)
-        return await create_chat(user=user, name=name)
+        chat = await create_chat(user=user, name=name)
+        logger.info("Chat created chat_id=%s user_id=%s", chat.uuid, user_uuid)
+        return chat
 
     async def get_chat(self, user_uuid: str, chat_uuid: str) -> tuple[Chat, list[Message]]:
         chat = await self._require_chat(user_uuid, chat_uuid)
         messages = await get_messages_by_chat(chat)
+        logger.debug("Chat retrieved chat_id=%s messages=%d", chat_uuid, len(messages))
         return chat, messages
 
     async def delete_chat(self, user_uuid: str, chat_uuid: str) -> None:
         chat = await self._require_chat(user_uuid, chat_uuid)
         await delete_chat(chat)
+        logger.info("Chat deleted chat_id=%s user_id=%s", chat_uuid, user_uuid)
 
     async def activate_chat(self, user_uuid: str, chat_uuid: str) -> None:
         chat = await self._require_chat(user_uuid, chat_uuid)
         await self._active_chats.set(f"{_ACTIVE_CHAT_KEY_PREFIX}{user_uuid}", str(chat.uuid))
+        logger.info("Chat activated chat_id=%s user_id=%s", chat_uuid, user_uuid)
 
     async def get_active_chat(self, user_uuid: str) -> Chat:
         chat_uuid = await self._active_chats.get(f"{_ACTIVE_CHAT_KEY_PREFIX}{user_uuid}")
         if chat_uuid is None:
+            logger.debug("No active chat found user_id=%s", user_uuid)
             raise ApiException(404, "no_active_chat", "No active chat is set")
         return await self._require_chat(user_uuid, chat_uuid)
 
     async def post_message(self, user_uuid: str, chat_uuid: str, text: str, is_ai: bool) -> Message:
         chat = await self._require_chat(user_uuid, chat_uuid)
-        return await create_message(chat=chat, text=text, is_ai=is_ai)
+        message = await create_message(chat=chat, text=text, is_ai=is_ai)
+        logger.debug(
+            "Message posted chat_id=%s message_id=%s is_ai=%s", chat_uuid, message.uuid, is_ai
+        )
+        return message
 
     async def get_message(self, user_uuid: str, chat_uuid: str, message_uuid: str) -> Message:
         chat = await self._require_chat(user_uuid, chat_uuid)
         message = await get_message_by_uuid_for_chat(message_uuid, chat.uuid)
         if message is None:
+            logger.warning("Message not found message_id=%s chat_id=%s", message_uuid, chat_uuid)
             raise ApiException(404, "message_not_found", "Message not found")
         return message
 
     async def delete_message(self, user_uuid: str, chat_uuid: str, message_uuid: str) -> None:
         message = await self.get_message(user_uuid, chat_uuid, message_uuid)
         await delete_message(message)
+        logger.info("Message deleted message_id=%s chat_id=%s", message_uuid, chat_uuid)
 
     async def create_feedback(self, session_uuid: str, text: str):
+        logger.info("Feedback created session_id=%s", session_uuid)
         return await create_feedback(session_uuid=session_uuid, text=text)
 
     async def create_judgement(self, session_uuid: str, text: str):
+        logger.info("Judgement created session_id=%s", session_uuid)
         return await create_judgement(session_uuid=session_uuid, text=text)
 
     async def _require_user(self, user_uuid: str) -> User:
