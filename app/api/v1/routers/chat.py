@@ -17,7 +17,7 @@ chat_router = APIRouter(
     prefix="/chats", tags=["Chat"], dependencies=[Depends(get_current_token_payload)]
 )
 message_router = APIRouter(
-    prefix="/chat/{chat_uuid}/message",
+    prefix="/chats/{chat_uuid}/message",
     tags=["Chat"],
     dependencies=[Depends(get_current_token_payload)],
 )
