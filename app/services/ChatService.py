@@ -8,6 +8,7 @@ from app.database.actions import (
     delete_chat,
     delete_message,
     get_chat_by_uuid_for_user,
+    get_chats_by_user,
     get_message_by_uuid_for_chat,
     get_messages_by_chat,
     get_user_by_uuid,
@@ -27,6 +28,9 @@ class ChatService:
     async def create_chat(self, user_uuid: str, name: str) -> Chat:
         user = await self._require_user(user_uuid)
         return await create_chat(user=user, name=name)
+
+    async def get_chats(self, user_uuid: str) -> list[Chat]:
+        return await get_chats_by_user(user_uuid)
 
     async def get_chat(self, user_uuid: str, chat_uuid: str) -> tuple[Chat, list[Message]]:
         chat = await self._require_chat(user_uuid, chat_uuid)
