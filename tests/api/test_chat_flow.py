@@ -55,9 +55,7 @@ async def test_list_chats_excludes_other_users(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
     _create_chat(client, auth_headers(tokens), name="Owner chat")
 
-    other_tokens = _register_and_activate(
-        client, fake_mailer, email="other@example.com", username="otheruser"
-    )
+    other_tokens = _register_and_activate(client, fake_mailer, email="other@example.com")
     other_headers = auth_headers(other_tokens)
     _create_chat(client, other_headers, name="Other chat")
 
@@ -113,9 +111,7 @@ async def test_chat_not_visible_to_other_user(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
     chat = _create_chat(client, auth_headers(tokens))
 
-    other_tokens = _register_and_activate(
-        client, fake_mailer, email="other@example.com", username="otheruser"
-    )
+    other_tokens = _register_and_activate(client, fake_mailer, email="other@example.com")
     other_headers = auth_headers(other_tokens)
 
     response = client.get(f"/v1/chats/{chat['uuid']}", headers=other_headers)
@@ -180,9 +176,7 @@ async def test_activate_chat_not_owned_fails(client: TestClient, fake_mailer):
     tokens = _register_and_activate(client, fake_mailer)
     chat = _create_chat(client, auth_headers(tokens))
 
-    other_tokens = _register_and_activate(
-        client, fake_mailer, email="other@example.com", username="otheruser"
-    )
+    other_tokens = _register_and_activate(client, fake_mailer, email="other@example.com")
     response = client.put(
         "/v1/chats/active",
         json={"uuid": chat["uuid"]},

@@ -8,7 +8,6 @@ from app.database.models import ChatStatus, UserStatus
 
 class AuthRegisterRequest(BaseModel):
     email: EmailStr = Field(..., max_length=254)
-    username: str = Field(..., min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_.-]+$")
     first_name: str = Field(..., min_length=1, max_length=64)
     last_name: str = Field(..., min_length=1, max_length=64)
     password: str = Field(..., min_length=8, max_length=128)

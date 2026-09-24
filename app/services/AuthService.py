@@ -14,7 +14,6 @@ from app.database.actions import (
     disable_mfa,
     enable_mfa,
     get_user_by_email,
-    get_user_by_username,
     get_user_by_uuid,
     set_mfa_secret,
 )
@@ -30,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 _ACTIVATION_KEY_PREFIX = "activation:"
 _PENDING_EMAIL_KEY_PREFIX = "pending_email:"
-_PENDING_USERNAME_KEY_PREFIX = "pending_username:"
 _REFRESH_KEY_PREFIX = "refresh:"
 
 
@@ -51,33 +49,20 @@ class AuthService:
         self,
         *,
         email: str,
-        username: str,
         first_name: str,
         last_name: str,
         password: str,
     ) -> UUID:
-        logger.info("Registration attempt for email=%s username=%s", email, username)
+        logger.debug("Registration attempt for email=%s", email)
         if await get_user_by_email(email):
             logger.warning("Registration failed: email already registered email=%s", email)
             raise ApiException(409, "email_taken", "Email is already registered", field="email")
-        if await get_user_by_username(username):
-            logger.warning("Registration failed: username already taken username=%s", username)
-            raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         email_code = await self._tokens.get(f"{_PENDING_EMAIL_KEY_PREFIX}{email}")
-        username_code = await self._tokens.get(f"{_PENDING_USERNAME_KEY_PREFIX}{username}")
-        if email_code and email_code == username_code:
-            # Same (email, username) pair: wipe the old pending so this acts as a resend
-            logger.info("Resending activation for email=%s username=%s", email, username)
+        if email_code:
+            # Same email: wipe the old pending so this acts as a resend
+            logger.debug("Resending activation for email=%s", email)
             await self._cleanup_pending(email_code)
-        elif email_code:
-            logger.warning("Registration failed: pending email already exists email=%s", email)
-            raise ApiException(409, "email_taken", "Email is already registered", field="email")
-        elif username_code:
-            logger.warning(
-                "Registration failed: pending username already exists username=%s", username
-            )
-            raise ApiException(409, "username_taken", "Username is already taken", field="username")
 
         ttl = timedelta(minutes=self._config.activation_code_expire_minutes)
         code = str(uuid4())
@@ -86,7 +71,6 @@ class AuthService:
             {
                 "user_id": str(user_id),
                 "email": email,
-                "username": username,
                 "first_name": first_name,
                 "last_name": last_name,
                 "hashed_password": hash_password(password),
@@ -94,9 +78,8 @@ class AuthService:
         )
         await self._tokens.set(f"{_ACTIVATION_KEY_PREFIX}{code}", pending_data, expiration=ttl)
         await self._tokens.set(f"{_PENDING_EMAIL_KEY_PREFIX}{email}", code, expiration=ttl)
-        await self._tokens.set(f"{_PENDING_USERNAME_KEY_PREFIX}{username}", code, expiration=ttl)
         await self._mailer.send_activation_link(email=email, code=code)
-        logger.info("Registration successful user_id=%s email=%s", user_id, email)
+        logger.debug("Registration pending data stored user_id=%s email=%s", user_id, email)
         return user_id
 
     async def _cleanup_pending(self, code: str) -> None:
@@ -104,11 +87,10 @@ class AuthService:
         if raw:
             data = json.loads(raw)
             await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
-            await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
             await self._tokens.delete(f"{_ACTIVATION_KEY_PREFIX}{code}")
 
     async def activate(self, code: str) -> tuple[str, str]:
-        logger.info("Activation attempt code=%s", code)
+        logger.debug("Activation attempt code=%s", code)
         key = f"{_ACTIVATION_KEY_PREFIX}{code}"
         raw = await self._tokens.get(key)
         if raw is None:
@@ -122,7 +104,6 @@ class AuthService:
             user = await create_user(
                 user_id=UUID(data["user_id"]),
                 email=data["email"],
-                username=data["username"],
                 firstname=data["first_name"],
                 lastname=data["last_name"],
                 hashed_password=data["hashed_password"],
@@ -130,18 +111,14 @@ class AuthService:
             )
         except IntegrityError:
             logger.warning(
-                "Activation failed: account conflict email=%s username=%s",
+                "Activation failed: account conflict email=%s",
                 data["email"],
-                data["username"],
             )
-            raise ApiException(
-                409, "account_conflict", "Email or username is already registered"
-            ) from None
+            raise ApiException(409, "account_conflict", "Email is already registered") from None
         await self._tokens.delete(key)
         await self._tokens.delete(f"{_PENDING_EMAIL_KEY_PREFIX}{data['email']}")
-        await self._tokens.delete(f"{_PENDING_USERNAME_KEY_PREFIX}{data['username']}")
 
-        logger.info("Account activated user_id=%s email=%s", user.uuid, data["email"])
+        logger.debug("Activation Valkey keys cleaned up email=%s", data["email"])
         return await self._issue_tokens(user)
 
     async def login(

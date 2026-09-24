@@ -24,10 +24,10 @@ async def test_validation_handler_maps_to_400_with_field():
         errors=[
             {
                 "type": "string_too_short",
-                "loc": ("body", "username"),
-                "msg": "String should have at least 3 characters",
-                "input": "ab",
-                "ctx": {"min_length": 3},
+                "loc": ("body", "password"),
+                "msg": "String should have at least 8 characters",
+                "input": "short",
+                "ctx": {"min_length": 8},
             }
         ]
     )
@@ -38,4 +38,4 @@ async def test_validation_handler_maps_to_400_with_field():
     assert response.status_code == 400
     body = bytes(response.body).decode()
     assert '"code":"validation_error"' in body
-    assert '"field":"username"' in body
+    assert '"field":"password"' in body

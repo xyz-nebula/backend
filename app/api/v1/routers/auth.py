@@ -31,7 +31,6 @@ async def register(
 ) -> AuthRegisterResponse:
     user_id = await auth_service.register(
         email=body.email,
-        username=body.username,
         first_name=body.first_name,
         last_name=body.last_name,
         password=body.password,

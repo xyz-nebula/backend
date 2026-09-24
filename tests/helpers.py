@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 REGISTER_PAYLOAD = {
     "email": "test@example.com",
-    "username": "testuser",
     "first_name": "Test",
     "last_name": "User",
     "password": "password123",
