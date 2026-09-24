@@ -74,6 +74,11 @@ class ChatResponse(BaseModel):
     created_at: datetime
 
 
+class ChatListItem(BaseModel):
+    uuid: UUID
+    name: str
+
+
 class ChatWithMessagesResponse(ChatResponse):
     messages: list[MessageResponse]
 
@@ -99,6 +104,7 @@ __all__ = [
     "TotpConfirmRequest",
     "TotpDisableRequest",
     "ChatCreateRequest",
+    "ChatListItem",
     "ChatResponse",
     "ChatWithMessagesResponse",
     "ChatActivateRequest",

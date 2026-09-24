@@ -4,6 +4,7 @@ from app.database.actions.chat import (
     create_judgement,
     delete_chat,
     get_chat_by_uuid_for_user,
+    get_chats_by_user,
 )
 from app.database.actions.message import (
     create_message,
@@ -43,6 +44,7 @@ __all__ = [
     "disable_mfa",
     "create_chat",
     "get_chat_by_uuid_for_user",
+    "get_chats_by_user",
     "delete_chat",
     "create_message",
     "get_messages_by_chat",
