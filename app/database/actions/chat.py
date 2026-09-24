@@ -1,30 +1,43 @@
+import logging
 from uuid import UUID
 
 from app.database.models import Chat, Feedback, Judgement, User
 
+logger = logging.getLogger(__name__)
+
 
 async def create_chat(*, user: User, name: str) -> Chat:
-    return await Chat.create(user=user, name=name)
+    chat = await Chat.create(user=user, name=name)
+    logger.info("Chat created chat_id=%s user_id=%s name=%s", chat.uuid, user.uuid, name)
+    return chat
 
 
 async def get_chat_by_uuid_for_user(chat_uuid: UUID | str, user_uuid: UUID | str) -> Chat | None:
+    logger.debug("Looking up chat chat_id=%s user_id=%s", chat_uuid, user_uuid)
     return await Chat.get_or_none(uuid=chat_uuid, user__uuid=user_uuid)
 
 
 async def get_chats_by_user(user_uuid: UUID | str) -> list[Chat]:
+    logger.debug("Listing chats for user_id=%s", user_uuid)
     return await Chat.filter(user__uuid=user_uuid).order_by("-created_at")
 
 
 async def delete_chat(chat: Chat) -> None:
+    chat_uuid = chat.uuid
     await chat.delete()
+    logger.info("Chat deleted chat_id=%s", chat_uuid)
 
 
 async def create_feedback(*, session_uuid: UUID | str, text: str) -> Feedback:
-    return await Feedback.create(session_uuid=session_uuid, text=text)
+    feedback = await Feedback.create(session_uuid=session_uuid, text=text)
+    logger.info("Feedback created feedback_id=%s session_id=%s", feedback.uuid, session_uuid)
+    return feedback
 
 
 async def create_judgement(*, session_uuid: UUID | str, text: str) -> Judgement:
-    return await Judgement.create(session_uuid=session_uuid, text=text)
+    judgement = await Judgement.create(session_uuid=session_uuid, text=text)
+    logger.info("Judgement created judgement_id=%s session_id=%s", judgement.uuid, session_uuid)
+    return judgement
 
 
 __all__ = [
