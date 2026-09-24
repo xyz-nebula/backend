@@ -32,7 +32,7 @@ async def test_validation_handler_maps_to_400_with_field():
         ]
     )
 
-    request = Request(scope={"type": "http", "headers": []})
+    request = Request(scope={"type": "http", "method": "POST", "path": "/test", "headers": []})
     response = await _validation_exception_handler(request=request, exc=exc)
 
     assert response.status_code == 400

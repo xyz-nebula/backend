@@ -1,8 +1,12 @@
+import logging
+
 from pydantic import BaseModel
 
 from app.config.storage import StorageConfig, ValkeyConfig
 from app.config.storage_type import StorageTypes
 from app.repository.base import BaseRepository
+
+logger = logging.getLogger(__name__)
 
 
 class RepositoryFactory:
@@ -57,11 +61,14 @@ class RepositoryFactory:
         storage_type = config.model_dump().get("storage_type", StorageTypes.MEMORY)
         if storage_type == StorageTypes.VALKEY:
             valkey_config = ValkeyConfig(**config.model_dump(exclude={"storage_type"}))
+            logger.info("Creating Valkey repository")
             return RepositoryFactory._create_valkey_repository(valkey_config)
         elif storage_type == StorageTypes.MEMORY:
             in_memory_config = StorageConfig(**config.model_dump(exclude={"storage_type"}))
+            logger.info("Creating in-memory repository")
             return RepositoryFactory._create_local_repository(in_memory_config)
         else:
+            logger.error("Unknown storage type: %s", storage_type)
             raise ValueError(
                 f"Unknown storage type: {storage_type}, available types: {StorageTypes.values()}"
             )

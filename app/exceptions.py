@@ -1,7 +1,11 @@
+import logging
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class ApiError(BaseModel):
@@ -17,6 +21,13 @@ class ApiException(Exception):
 
 
 async def _api_exception_handler(request: Request, exc: ApiException) -> JSONResponse:
+    logger.warning(
+        "API error %s %s code=%s message=%s",
+        request.method,
+        request.url.path,
+        exc.error.code,
+        exc.error.message,
+    )
     return JSONResponse(status_code=exc.status_code, content=exc.error.model_dump())
 
 
@@ -26,6 +37,13 @@ async def _validation_exception_handler(
     first_error = exc.errors()[0]
     field = ".".join(str(part) for part in first_error["loc"][1:]) or None
     error = ApiError(code="validation_error", message=first_error["msg"], field=field)
+    logger.warning(
+        "Validation error %s %s field=%s message=%s",
+        request.method,
+        request.url.path,
+        field,
+        first_error["msg"],
+    )
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=error.model_dump())
 
 
