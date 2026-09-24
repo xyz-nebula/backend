@@ -16,7 +16,6 @@ class User(Model):
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
     created_at = fields.DatetimeField(auto_now_add=True)
 
-    username = fields.CharField(max_length=100, unique=True)
     firstname = fields.CharField(max_length=100)
     lastname = fields.CharField(max_length=100)
     email = fields.CharField(max_length=254, unique=True)
