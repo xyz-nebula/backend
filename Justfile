@@ -1,5 +1,5 @@
 run-dev:
-    docker compose -f docker-compose.dev.yml up
+    docker compose -f docker-compose.dev.yml up --build --remove-orphans
 
 build-docker:
     docker build -t nebula-backend .
