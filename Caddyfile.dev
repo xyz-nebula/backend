@@ -2,4 +2,7 @@
     handle_path /api/* {
         reverse_proxy app:3000
     }
+    handle_path /admin/* {
+        reverse_proxy app:3000
+    }
 }

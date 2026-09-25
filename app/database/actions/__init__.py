@@ -18,11 +18,14 @@ from app.database.actions.user import (
     create_user,
     disable_mfa,
     enable_mfa,
+    get_admin_by_email,
+    get_admins,
     get_user_by_email,
     get_user_by_uuid,
     require_user_by_email,
     set_mfa_secret,
     set_password,
+    set_user_role,
     update_user,
 )
 
@@ -48,4 +51,7 @@ __all__ = [
     "create_feedback",
     "create_judgement",
     "check_user_activation_by_email",
+    "set_user_role",
+    "get_admins",
+    "get_admin_by_email",
 ]

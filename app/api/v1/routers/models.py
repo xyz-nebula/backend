@@ -91,9 +91,12 @@ class MessageCreateRequest(BaseModel):
     is_ai: bool = False
 
 
+class AdminRegisterRequest(BaseModel):
+    code: str = Field(...)
+
+
 __all__ = [
     "AuthRegisterRequest",
-    "AuthRegisterResponse",
     "AuthLoginRequest",
     "AuthActivationRequest",
     "AuthRefreshRequest",

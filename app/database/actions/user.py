@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 
-from app.database.models import User, UserStatus
+from app.database.models import User, UserRole, UserStatus
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +107,28 @@ async def disable_mfa(user: User) -> User:
     return user
 
 
+async def set_user_role(user: User, role: UserRole) -> User:
+    user.role = role
+    await user.save(update_fields=["role"])
+    logger.info("User role updated user_id=%s role=%s", user.uuid, role)
+    return user
+
+
+async def get_admins() -> list[User]:
+    admins = await User.filter(role="admin")
+    logger.debug("Fetched %d admins", len(admins))
+    return admins
+
+
+async def get_admin_by_email(email: str) -> User | None:
+    admin = await User.get_or_none(email=email, role="admin")
+    if admin:
+        logger.debug("Admin found by email=%s", email)
+    else:
+        logger.debug("No admin found by email=%s", email)
+    return admin
+
+
 __all__ = [
     "get_user_by_email",
     "get_user_by_uuid",
@@ -116,4 +138,7 @@ __all__ = [
     "set_mfa_secret",
     "enable_mfa",
     "disable_mfa",
+    "set_user_role",
+    "get_admins",
+    "get_admin_by_email",
 ]
