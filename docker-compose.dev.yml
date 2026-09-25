@@ -20,6 +20,7 @@ services:
       - ACTIVATION_CODE_EXPIRE_MINUTES=60
       - ACTIVATION_LINK_BASE_URL=http://localhost:5173/activate?code={code}
       - MAILER_TYPE=log
+      - ROOT_PATH=/api
     command: "sh -c 'cd /app && uv run --dev nebula-backend'"
     depends_on:
       valkey:
