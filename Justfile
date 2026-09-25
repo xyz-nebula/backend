@@ -14,6 +14,9 @@ sync:
 lint: sync
     uv run ruff check .
 
+lint-fix: sync
+    uv run ruff check --fix .
+
 fmt: sync
     uv run ruff format .
 

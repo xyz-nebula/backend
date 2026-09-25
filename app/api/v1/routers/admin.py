@@ -5,7 +5,6 @@ from app.dependencies import TokenPayload, get_current_token_payload
 from app.services.AdminService import AdminService, get_admin_service
 from app.services.AuthService import AuthService, get_auth_service
 
-
 router = APIRouter(
     prefix="/admin", tags=["Admin"], dependencies=[Depends(get_current_token_payload)]
 )

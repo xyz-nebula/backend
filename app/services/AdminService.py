@@ -1,12 +1,11 @@
+
 from fastapi import Depends
-from uuid import UUID
-from app.database.models import User, UserRole
-from app.exceptions import ApiException
 
 from app.config.config import Settings, settings
+from app.database.actions import set_user_role
+from app.database.models import User, UserRole
+from app.exceptions import ApiException
 from app.services.AuthService import AuthService, get_auth_service
-from app.database.actions import create_user, get_user_by_email, set_user_role
-
 
 
 class AdminService:
