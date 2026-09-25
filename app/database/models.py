@@ -11,6 +11,11 @@ class UserStatus(StrEnum):
     SUSPENDED = "suspended"
 
 
+class UserRole(StrEnum):
+    USER = "user"
+    ADMIN = "admin"
+
+
 class User(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
@@ -22,6 +27,7 @@ class User(Model):
     password = fields.CharField(max_length=60)
 
     status = fields.CharEnumField(UserStatus, default=UserStatus.PENDING_ACTIVATION)
+    role = fields.CharEnumField(UserRole, default=UserRole.USER)
     mfa_enabled = fields.BooleanField(default=False)
     mfa_secret = fields.CharField(max_length=32, null=True)
 

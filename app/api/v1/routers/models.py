@@ -91,9 +91,13 @@ class MessageCreateRequest(BaseModel):
     is_ai: bool = False
 
 
+class AdminRegisterRequest(BaseModel):
+    email: EmailStr = Field(..., max_length=254)
+    code: str = Field(...)
+
+
 __all__ = [
     "AuthRegisterRequest",
-    "AuthRegisterResponse",
     "AuthLoginRequest",
     "AuthActivationRequest",
     "AuthRefreshRequest",

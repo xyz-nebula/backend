@@ -24,6 +24,9 @@ from app.database.actions.user import (
     set_mfa_secret,
     set_password,
     update_user,
+    set_user_role,
+    get_admins,
+    get_admin_by_email,
 )
 
 __all__ = [
@@ -48,4 +51,7 @@ __all__ = [
     "create_feedback",
     "create_judgement",
     "check_user_activation_by_email",
+    "set_user_role",
+    "get_admins",
+    "get_admin_by_email",
 ]
