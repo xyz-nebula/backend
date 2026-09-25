@@ -27,7 +27,6 @@ class AdminService:
 
 
 def get_admin_service(
-    config: Settings = settings,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> AdminService:
-    return AdminService(config=config, auth_service=auth_service)
+    return AdminService(config=settings, auth_service=auth_service)
