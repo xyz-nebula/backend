@@ -1,7 +1,7 @@
 import logging
 from uuid import UUID
 
-from app.database.models import User, UserStatus
+from app.database.models import User, UserRole, UserStatus
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ async def disable_mfa(user: User) -> User:
     return user
 
 
-async def set_user_role(user: User, role: str) -> User:
+async def set_user_role(user: User, role: UserRole) -> User:
     user.role = role
     await user.save(update_fields=["role"])
     logger.info("User role updated user_id=%s role=%s", user.uuid, role)
