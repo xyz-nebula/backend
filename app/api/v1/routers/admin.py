@@ -6,16 +6,16 @@ from app.services.AdminService import AdminService, get_admin_service
 from app.services.AuthService import AuthService, get_auth_service
 
 
-admin_router = APIRouter(
-    prefix="/admins", tags=["Admin"], dependencies=[Depends(get_current_token_payload)]
+router = APIRouter(
+    prefix="/admin", tags=["Admin"], dependencies=[Depends(get_current_token_payload)]
 )
 
 
-@admin_router.get("/",)
+@router.get("/",)
 async def get_admins():...
 
 
-@admin_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/", status_code=status.HTTP_204_NO_CONTENT)
 async def set_admin(
     body: AdminRegisterRequest,
     payload: TokenPayload = Depends(get_current_token_payload),
