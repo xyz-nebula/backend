@@ -92,7 +92,6 @@ class MessageCreateRequest(BaseModel):
 
 
 class AdminRegisterRequest(BaseModel):
-    email: EmailStr = Field(..., max_length=254)
     code: str = Field(...)
 
 
