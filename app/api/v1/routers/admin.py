@@ -73,7 +73,7 @@ async def edit_case(
     return AdminCaseResponse.model_validate(case, from_attributes=True)
 
 
-@case_router.delete("/{case_uuid}}", status_code=status.HTTP_204_NO_CONTENT)
+@case_router.delete("/{case_uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_case(case_uuid: UUID, admin_service: AdminService = Depends(get_admin_service)):
     response = await admin_service.delete_case(case_uuid)
     if not response:
