@@ -3,6 +3,8 @@ import logging
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.database.actions import get_user_by_uuid
+from app.database.models import User, UserRole
 from app.exceptions import ApiException
 from app.services.JWTService import JWTService, TokenPayload, get_jwt_service
 
@@ -24,3 +26,14 @@ def get_current_token_payload(
         code = "token_expired" if "expired" in str(exc) else "invalid_token"
         logger.warning("Request rejected: %s", code)
         raise ApiException(401, code, str(exc)) from exc
+
+
+async def get_current_admin(
+    payload: TokenPayload = Depends(get_current_token_payload),
+) -> User:
+    user = await get_user_by_uuid(payload.sub)
+    if user is None:
+        raise ApiException(401, "invalid_token", "User no longer exists")
+    if user.role != UserRole.ADMIN:
+        raise ApiException(403, "forbidden", "User is not an admin")
+    return user

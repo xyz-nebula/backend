@@ -1,24 +1,26 @@
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.routers.models import AdminRegisterRequest
-from app.dependencies import TokenPayload, get_current_token_payload
+from app.dependencies import TokenPayload, get_current_admin, get_current_token_payload
 from app.services.AdminService import AdminService, get_admin_service
 from app.services.AuthService import AuthService, get_auth_service
 
-admin_router = APIRouter(
+# Admin registration only — requires a valid JWT but not admin role
+public_admin_router = APIRouter(
     prefix="/admin", tags=["Admin"], dependencies=[Depends(get_current_token_payload)]
 )
 
+# All other admin routes — requires the caller to be an admin
+protected_admin_router = APIRouter(
+    prefix="/admin", tags=["Admin"], dependencies=[Depends(get_current_admin)]
+)
+
 case_router = APIRouter(
-    prefix="/cases", tags=["Cases"], dependencies=[Depends(get_current_token_payload)]
+    prefix="/cases", tags=["Cases"], dependencies=[Depends(get_current_admin)]
 )
 
 
-@admin_router.get("/",)
-async def get_admins():...
-
-
-@admin_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
+@public_admin_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
 async def set_admin(
     body: AdminRegisterRequest,
     payload: TokenPayload = Depends(get_current_token_payload),
@@ -34,6 +36,10 @@ async def set_admin(
     return {"message": "User role set to admin successfully"}
 
 
+@protected_admin_router.get("/")
+async def get_admins():...
+
+
 @case_router.get("/")
 async def get_cases():...
 
@@ -43,5 +49,6 @@ async def create_case():...
 
 
 router = APIRouter()
-router.include_router(admin_router)
+router.include_router(public_admin_router)
+router.include_router(protected_admin_router)
 router.include_router(case_router)
