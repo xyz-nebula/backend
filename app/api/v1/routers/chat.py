@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.routers.models import (
+    CaseResponse,
     ChatActivateRequest,
     ChatCreateRequest,
     ChatListItem,
@@ -47,7 +48,7 @@ async def get_active_chat(
         name=chat.name,
         status=chat.status,
         created_at=chat.created_at,
-        case=chat.case,
+        case=CaseResponse.model_validate(chat.case, from_attributes=True),
     )
 
 
@@ -66,13 +67,13 @@ async def get_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatWithMessagesResponse:
-    # TODO: also return the case related to the chat
     chat, messages = await chat_service.get_chat(payload.sub, chat_uuid)
     return ChatWithMessagesResponse(
         uuid=chat.uuid,
         name=chat.name,
         status=chat.status,
         created_at=chat.created_at,
+        case=CaseResponse.model_validate(chat.case, from_attributes=True),
         messages=[
             MessageResponse(
                 uuid=message.uuid,

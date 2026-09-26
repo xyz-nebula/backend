@@ -44,6 +44,7 @@ class ChatService:
 
     async def get_chat(self, user_uuid: str, chat_uuid: str) -> tuple[Chat, list[Message]]:
         chat = await self._require_chat(user_uuid, chat_uuid)
+        await chat.fetch_related("case")
         messages = await get_messages_by_chat(chat)
         logger.debug("Chat retrieved chat_id=%s messages=%d", chat_uuid, len(messages))
         return chat, messages
@@ -63,7 +64,9 @@ class ChatService:
         if chat_uuid is None:
             logger.debug("No active chat found user_id=%s", user_uuid)
             raise ApiException(404, "no_active_chat", "No active chat is set")
-        return await self._require_chat(user_uuid, chat_uuid)
+        chat = await self._require_chat(user_uuid, chat_uuid)
+        await chat.fetch_related("case")
+        return chat
 
     async def post_message(self, user_uuid: str, chat_uuid: str, text: str, is_ai: bool) -> Message:
         chat = await self._require_chat(user_uuid, chat_uuid)

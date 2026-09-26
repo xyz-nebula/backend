@@ -114,6 +114,8 @@ async def test_get_chat_assembles_messages_in_sequence(
     assert [m["text"] for m in body["messages"]] == ["hello", "hi there"]
     assert [m["sequence"] for m in body["messages"]] == [1, 2]
     assert body["messages"][1]["is_ai"] is True
+    assert body["case"]["uuid"] == str(case_uuid)
+    assert body["case"]["name"] == "Test case"
 
 
 async def test_get_chat_not_found(client: TestClient, fake_mailer):

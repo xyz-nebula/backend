@@ -90,12 +90,12 @@ class ChatListItem(BaseModel):
     name: str
 
 
-class ChatWithMessagesResponse(ChatResponse):
-    messages: list[MessageResponse]
-
-
 class ChatWithCaseResponse(ChatResponse):
     case: CaseResponse
+
+
+class ChatWithMessagesResponse(ChatWithCaseResponse):
+    messages: list[MessageResponse]
 
 
 class ChatActivateRequest(BaseModel):
