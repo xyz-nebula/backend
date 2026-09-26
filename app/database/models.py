@@ -60,6 +60,31 @@ class Chat(Model):
         return f"Chat({self.uuid}, {self.name})"
 
 
+class Case(Model):
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+    name = fields.CharField(max_length=100)
+    participants = participants = fields.ManyToManyField(
+        "models.User", 
+        related_name="cases", 
+        through="case_participant"
+    )
+
+    description = fields.TextField()
+    category = fields.CharField(max_length=100)
+    difficulty = fields.CharField(max_length=100)
+    time_limit = fields.IntField()
+    preparations = fields.TextField()
+
+    class Meta:
+        table = "case"
+
+    def __str__(self) -> str:
+        return f"Case({self.uuid}, {self.name})"
+
+
 class Feedback(Model):
     """
     Feedback:
@@ -125,4 +150,4 @@ class Message(Model):
         return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
 
 
-__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message"]
+__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case"]
