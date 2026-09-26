@@ -2,16 +2,10 @@ from fastapi import Depends
 
 from app.config.config import Settings, settings
 from app.database.actions import (
-    set_user_role,
     create_case,
-    get_case,
-    get_case_by_creation_date,
-    get_all_cases,
-    edit_case,
-    delete_case,
+    set_user_role,
 )
-
-from app.database.models import User, UserRole, CaseDifficulty
+from app.database.models import CaseDifficulty, User, UserRole
 from app.exceptions import ApiException
 from app.services.AuthService import AuthService, get_auth_service
 
@@ -40,7 +34,7 @@ class AdminService:
             category=category,
             difficulty=difficulty,
             time_limit=time_limit,
-            preparations=preparations
+            preparations=preparations,
         )
 
     async def set_user_admin(self, user: User, code: str) -> User:

@@ -15,9 +15,7 @@ protected_admin_router = APIRouter(
     prefix="/admin", tags=["Admin"], dependencies=[Depends(get_current_admin)]
 )
 
-case_router = APIRouter(
-    prefix="/cases", tags=["Cases"], dependencies=[Depends(get_current_admin)]
-)
+case_router = APIRouter(prefix="/cases", tags=["Cases"], dependencies=[Depends(get_current_admin)])
 
 
 @public_admin_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
@@ -37,15 +35,15 @@ async def set_admin(
 
 
 @protected_admin_router.get("/")
-async def get_admins():...
+async def get_admins(): ...
 
 
 @case_router.get("/")
-async def get_cases():...
+async def get_cases(): ...
 
 
 @case_router.post("/")
-async def create_case():...
+async def create_case(): ...
 
 
 router = APIRouter()

@@ -76,9 +76,9 @@ async def edit_case(
 
 
 __all__ = [
-    "create_case", 
-    "get_case", 
-    "get_all_cases", 
+    "create_case",
+    "get_case",
+    "get_all_cases",
     "get_case_by_creation_date",
     "delete_case",
     "edit_case",

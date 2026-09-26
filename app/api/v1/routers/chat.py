@@ -5,6 +5,7 @@ from app.api.v1.routers.models import (
     ChatCreateRequest,
     ChatListItem,
     ChatResponse,
+    ChatWithCaseResponse,
     ChatWithMessagesResponse,
     MessageCreateRequest,
     MessageResponse,
@@ -35,14 +36,18 @@ async def create_chat(
     )
 
 
-@chat_router.get("/active", response_model=ChatResponse)
+@chat_router.get("/active", response_model=ChatWithCaseResponse)
 async def get_active_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
     chat = await chat_service.get_active_chat(payload.sub)
-    return ChatResponse(
-        uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
+    return ChatWithCaseResponse(
+        uuid=chat.uuid,
+        name=chat.name,
+        status=chat.status,
+        created_at=chat.created_at,
+        case=chat.case,
     )
 
 

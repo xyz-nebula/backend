@@ -151,12 +151,4 @@ class Message(Model):
         return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
 
 
-__all__ = [
-    "User", 
-    "UserStatus", 
-    "Chat", 
-    "ChatStatus", 
-    "Message", 
-    "Case", 
-    "CaseDifficulty"
-]
+__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case", "CaseDifficulty"]

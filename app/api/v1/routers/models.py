@@ -76,6 +76,7 @@ class CaseResponse(BaseModel):
     time_limit: int
     preparations: str
 
+
 class ChatResponse(BaseModel):
     uuid: UUID
     name: str
@@ -90,6 +91,7 @@ class ChatListItem(BaseModel):
 
 class ChatWithMessagesResponse(ChatResponse):
     messages: list[MessageResponse]
+
 
 class ChatWithCaseResponse(ChatResponse):
     case: CaseResponse
