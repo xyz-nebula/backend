@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from app.config.config import Settings, settings
-from app.database.actions import set_user_role, delete_case
+from app.database.actions import delete_case, set_user_role
 from app.database.models import Case, CaseDifficulty, User, UserRole
 from app.exceptions import ApiException
 from app.services.AuthService import AuthService, get_auth_service
@@ -79,6 +79,7 @@ class AdminService:
             first_role_preparations=first_role_preparations,
             second_role_preparations=second_role_preparations,
         )
+
     async def delete_case(self, case_uuid: UUID) -> bool:
         response = await delete_case(case_uuid=case_uuid)
         return response
