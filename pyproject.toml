@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "aerich>=0.10.1",
     "aiosmtplib>=3.0.2",
     "asyncpg>=0.30.0",
     "bcrypt>=5.0.0",
@@ -36,9 +37,18 @@ dev = [
 [tool.uv]
 package = true
 
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.aerich]
+tortoise_orm = "app.config.tortoise.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
 [tool.ruff]
 line-length = 100
 target-version = "py314"
+extend-exclude = ["migrations"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
