@@ -1,5 +1,6 @@
 import os
 import tempfile
+from uuid import UUID
 
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
 os.environ["DB_URL"] = f"sqlite://{os.path.join(tempfile.mkdtemp(), 'test.sqlite3')}"
@@ -10,6 +11,8 @@ from tortoise.contrib.test import truncate_all_models
 
 from app.app import app
 from app.config.storage import StorageConfig
+from app.database.actions import create_case
+from app.database.models import CaseDifficulty
 from app.repository.factory import get_token_repository
 from app.repository.local import LocalRepository
 from app.services.mailer import ActivationMailer, get_activation_mailer
@@ -36,6 +39,19 @@ def _test_client_session():
 async def reset_db(_test_client_session):
     yield
     await truncate_all_models()
+
+
+@pytest.fixture
+async def case_uuid() -> UUID:
+    case = await create_case(
+        name="Test case",
+        description="A case for tests",
+        category="general",
+        difficulty=CaseDifficulty.EASY,
+        time_limit=30,
+        preparations="None",
+    )
+    return case.uuid
 
 
 @pytest.fixture

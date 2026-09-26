@@ -56,6 +56,7 @@ class TotpDisableRequest(BaseModel):
 
 class ChatCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
+    case_uuid: UUID
 
 
 class MessageResponse(BaseModel):

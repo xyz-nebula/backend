@@ -30,7 +30,7 @@ async def create_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
-    chat = await chat_service.create_chat(payload.sub, body.name)
+    chat = await chat_service.create_chat(payload.sub, body.name, body.case_uuid)
     return ChatResponse(
         uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
     )

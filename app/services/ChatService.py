@@ -1,6 +1,8 @@
 import logging
+from uuid import UUID
 
 from fastapi import Depends
+from tortoise.exceptions import DoesNotExist
 
 from app.database.actions import (
     create_chat,
@@ -9,13 +11,14 @@ from app.database.actions import (
     create_message,
     delete_chat,
     delete_message,
+    get_case,
     get_chat_by_uuid_for_user,
     get_chats_by_user,
     get_message_by_uuid_for_chat,
     get_messages_by_chat,
     get_user_by_uuid,
 )
-from app.database.models import Chat, Message, User
+from app.database.models import Case, Chat, Message, User
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
@@ -29,9 +32,10 @@ class ChatService:
     def __init__(self, token_repository: BaseRepository):
         self._active_chats = token_repository
 
-    async def create_chat(self, user_uuid: str, name: str) -> Chat:
+    async def create_chat(self, user_uuid: str, name: str, case_uuid: UUID) -> Chat:
         user = await self._require_user(user_uuid)
-        chat = await create_chat(user=user, name=name)
+        case = await self._require_case(case_uuid)
+        chat = await create_chat(user=user, case=case, name=name)
         logger.info("Chat created chat_id=%s user_id=%s", chat.uuid, user_uuid)
         return chat
 
@@ -95,6 +99,12 @@ class ChatService:
         if user is None:
             raise ApiException(401, "invalid_token", "User no longer exists")
         return user
+
+    async def _require_case(self, case_uuid: UUID) -> Case:
+        try:
+            return await get_case(case_uuid)
+        except DoesNotExist:
+            raise ApiException(404, "case_not_found", "Case not found") from None
 
     async def _require_chat(self, user_uuid: str, chat_uuid: str) -> Chat:
         chat = await get_chat_by_uuid_for_user(chat_uuid, user_uuid)
