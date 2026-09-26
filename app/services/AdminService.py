@@ -28,6 +28,11 @@ class AdminService:
         difficulty: CaseDifficulty,
         time_limit: int,
         preparations: str,
+        system_prompt: str,
+        goal: str,
+        synopsis: str,
+        first_role: str,
+        second_role: str,
     ) -> Case:
         return await self._case_service.create_case(
             name=name,
@@ -36,6 +41,11 @@ class AdminService:
             difficulty=difficulty,
             time_limit=time_limit,
             preparations=preparations,
+            system_prompt=system_prompt,
+            goal=goal,
+            synopsis=synopsis,
+            first_role=first_role,
+            second_role=second_role,
         )
 
     async def edit_case(
@@ -45,6 +55,11 @@ class AdminService:
         description: str | None = None,
         time_limit: int | None = None,
         preparations: str | None = None,
+        system_prompt: str | None = None,
+        goal: str | None = None,
+        synopsis: str | None = None,
+        first_role: str | None = None,
+        second_role: str | None = None,
     ) -> Case:
         return await self._case_service.edit_case(
             case_uuid,
@@ -52,6 +67,11 @@ class AdminService:
             description=description,
             time_limit=time_limit,
             preparations=preparations,
+            system_prompt=system_prompt,
+            goal=goal,
+            synopsis=synopsis,
+            first_role=first_role,
+            second_role=second_role,
         )
 
     async def list_cases(self) -> list[Case]:
