@@ -34,7 +34,11 @@ async def create_chat(
 ) -> ChatResponse:
     chat = await chat_service.create_chat(payload.sub, body.name, body.case_uuid)
     return ChatResponse(
-        uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
+        uuid=chat.uuid,
+        name=chat.name,
+        status=chat.status,
+        preparations=chat.preparations,
+        created_at=chat.created_at,
     )
 
 
@@ -56,6 +60,7 @@ async def get_active_chat(
         uuid=chat.uuid,
         name=chat.name,
         status=chat.status,
+        preparations=chat.preparations,
         created_at=chat.created_at,
         case=CaseResponse.model_validate(chat.case, from_attributes=True),
     )
@@ -81,6 +86,7 @@ async def get_chat(
         uuid=chat.uuid,
         name=chat.name,
         status=chat.status,
+        preparations=chat.preparations,
         created_at=chat.created_at,
         case=CaseResponse.model_validate(chat.case, from_attributes=True),
         messages=[

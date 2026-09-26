@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from app.config.config import Settings, settings
-from app.database.actions import set_user_role
+from app.database.actions import delete_case, set_user_role
 from app.database.models import Case, CaseDifficulty, User, UserRole
 from app.exceptions import ApiException
 from app.services.AuthService import AuthService, get_auth_service
@@ -27,12 +27,13 @@ class AdminService:
         category: str,
         difficulty: CaseDifficulty,
         time_limit: int,
-        preparations: str,
         system_prompt: str,
         goal: str,
         synopsis: str,
         first_role: str,
         second_role: str,
+        first_role_preparations: str,
+        second_role_preparations: str,
     ) -> Case:
         return await self._case_service.create_case(
             name=name,
@@ -40,12 +41,13 @@ class AdminService:
             category=category,
             difficulty=difficulty,
             time_limit=time_limit,
-            preparations=preparations,
             system_prompt=system_prompt,
             goal=goal,
             synopsis=synopsis,
             first_role=first_role,
             second_role=second_role,
+            first_role_preparations=first_role_preparations,
+            second_role_preparations=second_role_preparations,
         )
 
     async def edit_case(
@@ -53,26 +55,34 @@ class AdminService:
         case_uuid: UUID,
         name: str | None = None,
         description: str | None = None,
+        difficulty: CaseDifficulty | None = None,
         time_limit: int | None = None,
-        preparations: str | None = None,
         system_prompt: str | None = None,
         goal: str | None = None,
         synopsis: str | None = None,
         first_role: str | None = None,
         second_role: str | None = None,
+        first_role_preparations: str | None = None,
+        second_role_preparations: str | None = None,
     ) -> Case:
         return await self._case_service.edit_case(
             case_uuid,
             name=name,
             description=description,
+            difficulty=difficulty,
             time_limit=time_limit,
-            preparations=preparations,
             system_prompt=system_prompt,
             goal=goal,
             synopsis=synopsis,
             first_role=first_role,
             second_role=second_role,
+            first_role_preparations=first_role_preparations,
+            second_role_preparations=second_role_preparations,
         )
+
+    async def delete_case(self, case_uuid: UUID) -> bool:
+        response = await delete_case(case_uuid=case_uuid)
+        return response
 
     async def list_cases(self) -> list[Case]:
         return await self._case_service.list_cases()

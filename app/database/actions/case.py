@@ -13,12 +13,13 @@ async def create_case(
     category: str,
     difficulty: CaseDifficulty,
     time_limit: int,
-    preparations: str,
     system_prompt: str,
     goal: str,
     synopsis: str,
     first_role: str,
     second_role: str,
+    first_role_preparations: str,
+    second_role_preparations: str,
 ) -> Case:
     case = await Case.create(
         name=name,
@@ -26,12 +27,13 @@ async def create_case(
         category=category,
         difficulty=difficulty,
         time_limit=time_limit,
-        preparations=preparations,
         system_prompt=system_prompt,
         goal=goal,
         synopsis=synopsis,
         first_role=first_role,
         second_role=second_role,
+        first_role_preparations=first_role_preparations,
+        second_role_preparations=second_role_preparations,
     )
     logger.info("Case created case_id=%s name=%s", case.uuid, name)
     return case
@@ -66,26 +68,30 @@ async def edit_case(
     case_uuid: UUID,
     name: str | None = None,
     description: str | None = None,
+    difficulty: CaseDifficulty | None = None,
     time_limit: int | None = None,
-    preparations: str | None = None,
     system_prompt: str | None = None,
     goal: str | None = None,
     synopsis: str | None = None,
     first_role: str | None = None,
     second_role: str | None = None,
+    first_role_preparations: str | None = None,
+    second_role_preparations: str | None = None,
 ) -> Case:
     case = await Case.get(uuid=case_uuid)
 
     updates = {
         "name": name,
         "description": description,
+        "difficulty": difficulty,
         "time_limit": time_limit,
-        "preparations": preparations,
         "system_prompt": system_prompt,
         "goal": goal,
         "synopsis": synopsis,
         "first_role": first_role,
         "second_role": second_role,
+        "first_role_preparations": first_role_preparations,
+        "second_role_preparations": second_role_preparations,
     }
     changed = {field: value for field, value in updates.items() if value is not None}
     if changed:

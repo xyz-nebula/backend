@@ -10,12 +10,13 @@ CASE_PAYLOAD = {
     "category": "network",
     "difficulty": "hard",
     "time_limit": 45,
-    "preparations": "Read the brief",
     "system_prompt": "You are the suspect",
     "goal": "Get a confession",
     "synopsis": "A heist gone wrong",
     "first_role": "Detective",
     "second_role": "Suspect",
+    "first_role_preparations": "Review the evidence",
+    "second_role_preparations": "Prepare an alibi",
 }
 
 

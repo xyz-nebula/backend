@@ -21,6 +21,7 @@ async def test_create_chat_success(client: TestClient, fake_mailer, case_uuid: U
     chat = _create_chat(client, case_uuid, headers)
     assert chat["name"] == "My chat"
     assert chat["status"] == "ongoing"
+    assert chat["preparations"] == ""
     assert chat["uuid"]
 
 
@@ -47,6 +48,8 @@ async def test_list_available_cases(client: TestClient, fake_mailer, case_uuid: 
     assert cases[0]["synopsis"] == "A short synopsis"
     assert cases[0]["first_role"] == "Detective"
     assert cases[0]["second_role"] == "Suspect"
+    assert cases[0]["first_role_preparations"] == "Review the evidence"
+    assert cases[0]["second_role_preparations"] == "Prepare an alibi"
     assert "system_prompt" not in cases[0]
 
 
