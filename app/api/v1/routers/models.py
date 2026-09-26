@@ -76,6 +76,14 @@ class CaseResponse(BaseModel):
     difficulty: str
     time_limit: int
     preparations: str
+    goal: str
+    synopsis: str
+    first_role: str
+    second_role: str
+
+
+class AdminCaseResponse(CaseResponse):
+    system_prompt: str
 
 
 class CaseCreateRequest(BaseModel):
@@ -85,6 +93,11 @@ class CaseCreateRequest(BaseModel):
     difficulty: CaseDifficulty
     time_limit: int = Field(..., gt=0)
     preparations: str
+    system_prompt: str = Field(..., min_length=1)
+    goal: str = Field(..., min_length=1)
+    synopsis: str = Field(..., min_length=1)
+    first_role: str = Field(..., min_length=1)
+    second_role: str = Field(..., min_length=1)
 
 
 class CaseEditRequest(BaseModel):
@@ -92,6 +105,11 @@ class CaseEditRequest(BaseModel):
     description: str | None = Field(None, min_length=1)
     time_limit: int | None = Field(None, gt=0)
     preparations: str | None = None
+    system_prompt: str | None = Field(None, min_length=1)
+    goal: str | None = Field(None, min_length=1)
+    synopsis: str | None = Field(None, min_length=1)
+    first_role: str | None = Field(None, min_length=1)
+    second_role: str | None = Field(None, min_length=1)
 
 
 class ChatResponse(BaseModel):
@@ -145,6 +163,7 @@ __all__ = [
     "MessageResponse",
     "MessageCreateRequest",
     "CaseResponse",
+    "AdminCaseResponse",
     "CaseCreateRequest",
     "CaseEditRequest",
     "ChatWithCaseResponse",
