@@ -1,8 +1,17 @@
 from fastapi import Depends
 
 from app.config.config import Settings, settings
-from app.database.actions import set_user_role
-from app.database.models import User, UserRole
+from app.database.actions import (
+    set_user_role,
+    create_case,
+    get_case,
+    get_case_by_creation_date,
+    get_all_cases,
+    edit_case,
+    delete_case,
+)
+
+from app.database.models import User, UserRole, CaseDifficulty
 from app.exceptions import ApiException
 from app.services.AuthService import AuthService, get_auth_service
 
@@ -15,6 +24,24 @@ class AdminService:
     async def _verify_admin(self, user: User) -> None:
         if user.role != UserRole.ADMIN:
             raise ApiException(403, "forbidden", "User is not an admin")
+
+    async def create_case(
+        self,
+        name: str,
+        description: str,
+        category: str,
+        difficulty: CaseDifficulty,
+        time_limit: int,
+        preparations: str,
+    ):
+        await create_case(
+            name=name,
+            description=description,
+            category=category,
+            difficulty=difficulty,
+            time_limit=time_limit,
+            preparations=preparations
+        )
 
     async def set_user_admin(self, user: User, code: str) -> User:
         if code != self._config.admin_code:

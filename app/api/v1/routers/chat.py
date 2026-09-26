@@ -61,6 +61,7 @@ async def get_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatWithMessagesResponse:
+    # TODO: also return the case related to the chat
     chat, messages = await chat_service.get_chat(payload.sub, chat_uuid)
     return ChatWithMessagesResponse(
         uuid=chat.uuid,
