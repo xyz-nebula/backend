@@ -19,7 +19,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-editable
 
 FROM python:3.14-slim
+WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
+COPY pyproject.toml ./
+COPY migrations ./migrations
 
-CMD ["/app/.venv/bin/nebula-backend"]
+CMD ["/bin/sh", "-c", "/app/.venv/bin/aerich upgrade && /app/.venv/bin/nebula-backend"]
