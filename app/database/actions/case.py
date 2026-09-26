@@ -14,6 +14,11 @@ async def create_case(
     difficulty: CaseDifficulty,
     time_limit: int,
     preparations: str,
+    system_prompt: str,
+    goal: str,
+    synopsis: str,
+    first_role: str,
+    second_role: str,
 ) -> Case:
     case = await Case.create(
         name=name,
@@ -22,6 +27,11 @@ async def create_case(
         difficulty=difficulty,
         time_limit=time_limit,
         preparations=preparations,
+        system_prompt=system_prompt,
+        goal=goal,
+        synopsis=synopsis,
+        first_role=first_role,
+        second_role=second_role,
     )
     logger.info("Case created case_id=%s name=%s", case.uuid, name)
     return case
@@ -58,6 +68,11 @@ async def edit_case(
     description: str | None = None,
     time_limit: int | None = None,
     preparations: str | None = None,
+    system_prompt: str | None = None,
+    goal: str | None = None,
+    synopsis: str | None = None,
+    first_role: str | None = None,
+    second_role: str | None = None,
 ) -> Case:
     case = await Case.get(uuid=case_uuid)
 
@@ -66,6 +81,11 @@ async def edit_case(
         "description": description,
         "time_limit": time_limit,
         "preparations": preparations,
+        "system_prompt": system_prompt,
+        "goal": goal,
+        "synopsis": synopsis,
+        "first_role": first_role,
+        "second_role": second_role,
     }
     changed = {field: value for field, value in updates.items() if value is not None}
     if changed:

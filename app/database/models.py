@@ -78,6 +78,11 @@ class Case(Model):
     difficulty = fields.CharField(max_length=100)
     time_limit = fields.IntField()
     preparations = fields.TextField()
+    system_prompt = fields.TextField()
+    goal = fields.TextField()
+    synopsis = fields.TextField()
+    first_role = fields.TextField()
+    second_role = fields.TextField()
 
     class Meta:
         table = "case"
