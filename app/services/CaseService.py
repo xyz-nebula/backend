@@ -20,12 +20,13 @@ class CaseService:
         category: str,
         difficulty: CaseDifficulty,
         time_limit: int,
-        preparations: str,
         system_prompt: str,
         goal: str,
         synopsis: str,
         first_role: str,
         second_role: str,
+        first_role_preparations: str,
+        second_role_preparations: str,
     ) -> Case:
         return await create_case(
             name=name,
@@ -33,12 +34,13 @@ class CaseService:
             category=category,
             difficulty=difficulty,
             time_limit=time_limit,
-            preparations=preparations,
             system_prompt=system_prompt,
             goal=goal,
             synopsis=synopsis,
             first_role=first_role,
             second_role=second_role,
+            first_role_preparations=first_role_preparations,
+            second_role_preparations=second_role_preparations,
         )
 
     async def edit_case(
@@ -48,12 +50,13 @@ class CaseService:
         description: str | None = None,
         difficulty: CaseDifficulty | None = None,
         time_limit: int | None = None,
-        preparations: str | None = None,
         system_prompt: str | None = None,
         goal: str | None = None,
         synopsis: str | None = None,
         first_role: str | None = None,
         second_role: str | None = None,
+        first_role_preparations: str | None = None,
+        second_role_preparations: str | None = None,
     ) -> Case:
         try:
             return await edit_case(
@@ -62,12 +65,13 @@ class CaseService:
                 description=description,
                 difficulty=difficulty,
                 time_limit=time_limit,
-                preparations=preparations,
                 system_prompt=system_prompt,
                 goal=goal,
                 synopsis=synopsis,
                 first_role=first_role,
                 second_role=second_role,
+                first_role_preparations=first_role_preparations,
+                second_role_preparations=second_role_preparations,
             )
         except DoesNotExist:
             raise ApiException(404, "case_not_found", "Case not found") from None

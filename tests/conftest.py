@@ -49,12 +49,13 @@ async def case_uuid() -> UUID:
         category="general",
         difficulty=CaseDifficulty.EASY,
         time_limit=30,
-        preparations="None",
         system_prompt="You are a test persona",
         goal="Reach the goal",
         synopsis="A short synopsis",
         first_role="Detective",
         second_role="Suspect",
+        first_role_preparations="Review the evidence",
+        second_role_preparations="Prepare an alibi",
     )
     return case.uuid
 

@@ -60,6 +60,7 @@ class Chat(Model):
     user = fields.ForeignKeyField("models.User", related_name="chats")
     case = fields.ForeignKeyField("models.Case", related_name="chats")
     status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
+    preparations = fields.TextField(default="")
 
     class Meta:
         table = "chat"
@@ -77,12 +78,13 @@ class Case(Model):
     category = fields.CharField(max_length=100)
     difficulty = fields.CharField(max_length=100)
     time_limit = fields.IntField()
-    preparations = fields.TextField()
     system_prompt = fields.TextField()
     goal = fields.TextField()
     synopsis = fields.TextField()
     first_role = fields.TextField()
     second_role = fields.TextField()
+    first_role_preparations = fields.TextField()
+    second_role_preparations = fields.TextField()
 
     class Meta:
         table = "case"

@@ -75,11 +75,12 @@ class CaseResponse(BaseModel):
     category: str
     difficulty: str
     time_limit: int
-    preparations: str
     goal: str
     synopsis: str
     first_role: str
     second_role: str
+    first_role_preparations: str
+    second_role_preparations: str
 
 
 class AdminCaseResponse(CaseResponse):
@@ -92,31 +93,34 @@ class CaseCreateRequest(BaseModel):
     category: str = Field(..., min_length=1, max_length=100)
     difficulty: CaseDifficulty
     time_limit: int = Field(..., gt=0)
-    preparations: str
     system_prompt: str = Field(..., min_length=1)
     goal: str = Field(..., min_length=1)
     synopsis: str = Field(..., min_length=1)
     first_role: str = Field(..., min_length=1)
     second_role: str = Field(..., min_length=1)
+    first_role_preparations: str
+    second_role_preparations: str
 
 
 class CaseEditRequest(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = Field(None, min_length=1)
-    difficulty: CaseDifficulty 
+    difficulty: CaseDifficulty | None = None
     time_limit: int | None = Field(None, gt=0)
-    preparations: str | None = None
     system_prompt: str | None = Field(None, min_length=1)
     goal: str | None = Field(None, min_length=1)
     synopsis: str | None = Field(None, min_length=1)
     first_role: str | None = Field(None, min_length=1)
     second_role: str | None = Field(None, min_length=1)
+    first_role_preparations: str | None = None
+    second_role_preparations: str | None = None
 
 
 class ChatResponse(BaseModel):
     uuid: UUID
     name: str
     status: ChatStatus
+    preparations: str
     created_at: datetime
 
 
