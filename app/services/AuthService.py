@@ -111,8 +111,8 @@ class AuthService:
             )
         except IntegrityError:
             logger.warning(
-                "Activation failed: account conflict email=%s",
-                data["email"],
+                "Activation failed (IntegrityError):",
+                IntegrityError,
             )
             raise ApiException(409, "account_conflict", "Email is already registered") from None
         await self._tokens.delete(key)
