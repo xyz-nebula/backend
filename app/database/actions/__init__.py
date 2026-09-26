@@ -29,6 +29,15 @@ from app.database.actions.user import (
     update_user,
 )
 
+from app.database.actions.case import (
+    create_case,
+    get_case,
+    get_all_cases,
+    get_case_by_creation_date,
+    delete_case,
+    edit_case,
+)
+
 __all__ = [
     "get_user_by_email",
     "require_user_by_email",
@@ -54,4 +63,10 @@ __all__ = [
     "set_user_role",
     "get_admins",
     "get_admin_by_email",
+    "create_case", 
+    "get_case", 
+    "get_all_cases", 
+    "get_case_by_creation_date",
+    "delete_case",
+    "edit_case",
 ]
