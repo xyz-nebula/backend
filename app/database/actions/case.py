@@ -1,6 +1,7 @@
 import logging
 from uuid import UUID
 from typing import Optional
+from datetime import datetime
 
 from app.database.models import Case, CaseDifficulty, Chat, ChatStatus
 
@@ -15,6 +16,15 @@ async def create_case(
     time_limit: int,
     preparations: str
 ):...
+
+
+async def get_case(case_uuid: UUID):...
+
+
+async def get_all_cases():...
+
+
+async def get_case_by_creation_date(date: datetime):...
 
 
 async def delete_case(case_uuid: UUID):...
