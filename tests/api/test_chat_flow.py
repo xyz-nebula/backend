@@ -36,6 +36,18 @@ async def test_create_chat_unknown_case(client: TestClient, fake_mailer):
     assert response.json()["code"] == "case_not_found"
 
 
+async def test_list_available_cases(client: TestClient, fake_mailer, case_uuid: UUID):
+    tokens = _register_and_activate(client, fake_mailer)
+
+    response = client.get("/v1/chats/cases", headers=auth_headers(tokens))
+    assert response.status_code == 200, response.text
+    assert [c["uuid"] for c in response.json()] == [str(case_uuid)]
+
+
+async def test_list_available_cases_requires_auth(client: TestClient):
+    assert client.get("/v1/chats/cases").status_code == 401
+
+
 async def test_create_chat_requires_auth(client: TestClient):
     response = client.post("/v1/chats/", json={"name": "My chat"})
     assert response.status_code == 401
