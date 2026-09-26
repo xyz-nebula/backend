@@ -16,6 +16,13 @@ class UserRole(StrEnum):
     ADMIN = "admin"
 
 
+class CaseDifficulty(StrEnum):
+    EASY = "easy"
+    MODERATE = "moderate"
+    HARD = "hard"
+    INSANE = "insane"
+
+
 class User(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
@@ -51,6 +58,7 @@ class Chat(Model):
 
     name = fields.CharField(max_length=100)
     user = fields.ForeignKeyField("models.User", related_name="chats")
+    case = fields.ForeignKeyField("models.Case", related_name="chats")
     status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
 
     class Meta:
@@ -58,6 +66,29 @@ class Chat(Model):
 
     def __str__(self) -> str:
         return f"Chat({self.uuid}, {self.name})"
+
+
+class Case(Model):
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    name = fields.CharField(max_length=100)
+    description = fields.TextField()
+    category = fields.CharField(max_length=100)
+    difficulty = fields.CharField(max_length=100)
+    time_limit = fields.IntField()
+    preparations = fields.TextField()
+    system_prompt = fields.TextField()
+    goal = fields.TextField()
+    synopsis = fields.TextField()
+    first_role = fields.TextField()
+    second_role = fields.TextField()
+
+    class Meta:
+        table = "case"
+
+    def __str__(self) -> str:
+        return f"Case({self.uuid}, {self.name})"
 
 
 class Feedback(Model):
@@ -125,4 +156,4 @@ class Message(Model):
         return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
 
 
-__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message"]
+__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case", "CaseDifficulty"]

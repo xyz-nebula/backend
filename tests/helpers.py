@@ -29,3 +29,12 @@ def register_and_activate(client: TestClient, fake_mailer, **overrides) -> dict:
 
 def auth_headers(tokens: dict) -> dict:
     return {"Authorization": f"Bearer {tokens['access_token']}"}
+
+
+def make_admin(client: TestClient, tokens: dict) -> None:
+    from app.config.config import settings
+
+    response = client.post(
+        "/v1/admin/", json={"code": settings.admin_code}, headers=auth_headers(tokens)
+    )
+    assert response.status_code == 204, response.text

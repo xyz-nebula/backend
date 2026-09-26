@@ -1,3 +1,11 @@
+from app.database.actions.case import (
+    create_case,
+    delete_case,
+    edit_case,
+    get_all_cases,
+    get_case,
+    get_case_by_creation_date,
+)
 from app.database.actions.chat import (
     create_chat,
     create_feedback,
@@ -54,4 +62,10 @@ __all__ = [
     "set_user_role",
     "get_admins",
     "get_admin_by_email",
+    "create_case",
+    "get_case",
+    "get_all_cases",
+    "get_case_by_creation_date",
+    "delete_case",
+    "edit_case",
 ]

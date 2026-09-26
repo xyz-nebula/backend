@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.routers.models import (
+    CaseResponse,
     ChatActivateRequest,
     ChatCreateRequest,
     ChatListItem,
     ChatResponse,
+    ChatWithCaseResponse,
     ChatWithMessagesResponse,
     MessageCreateRequest,
     MessageResponse,
 )
 from app.dependencies import get_current_token_payload
+from app.services.CaseService import CaseService, get_case_service
 from app.services.ChatService import ChatService, get_chat_service
 from app.services.JWTService import TokenPayload
 
@@ -29,20 +32,32 @@ async def create_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
-    chat = await chat_service.create_chat(payload.sub, body.name)
+    chat = await chat_service.create_chat(payload.sub, body.name, body.case_uuid)
     return ChatResponse(
         uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
     )
 
 
-@chat_router.get("/active", response_model=ChatResponse)
+@chat_router.get("/cases", response_model=list[CaseResponse])
+async def get_cases(
+    case_service: CaseService = Depends(get_case_service),
+) -> list[CaseResponse]:
+    cases = await case_service.list_cases()
+    return [CaseResponse.model_validate(case, from_attributes=True) for case in cases]
+
+
+@chat_router.get("/active", response_model=ChatWithCaseResponse)
 async def get_active_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
     chat = await chat_service.get_active_chat(payload.sub)
-    return ChatResponse(
-        uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
+    return ChatWithCaseResponse(
+        uuid=chat.uuid,
+        name=chat.name,
+        status=chat.status,
+        created_at=chat.created_at,
+        case=CaseResponse.model_validate(chat.case, from_attributes=True),
     )
 
 
@@ -67,6 +82,7 @@ async def get_chat(
         name=chat.name,
         status=chat.status,
         created_at=chat.created_at,
+        case=CaseResponse.model_validate(chat.case, from_attributes=True),
         messages=[
             MessageResponse(
                 uuid=message.uuid,

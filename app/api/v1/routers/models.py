@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.database.models import ChatStatus, UserStatus
+from app.database.models import CaseDifficulty, ChatStatus, UserStatus
 
 
 class AuthRegisterRequest(BaseModel):
@@ -56,6 +56,7 @@ class TotpDisableRequest(BaseModel):
 
 class ChatCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
+    case_uuid: UUID
 
 
 class MessageResponse(BaseModel):
@@ -64,6 +65,51 @@ class MessageResponse(BaseModel):
     is_ai: bool
     text: str
     created_at: datetime
+
+
+class CaseResponse(BaseModel):
+    uuid: UUID
+    created_at: datetime
+    name: str
+    description: str
+    category: str
+    difficulty: str
+    time_limit: int
+    preparations: str
+    goal: str
+    synopsis: str
+    first_role: str
+    second_role: str
+
+
+class AdminCaseResponse(CaseResponse):
+    system_prompt: str
+
+
+class CaseCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = Field(..., min_length=1)
+    category: str = Field(..., min_length=1, max_length=100)
+    difficulty: CaseDifficulty
+    time_limit: int = Field(..., gt=0)
+    preparations: str
+    system_prompt: str = Field(..., min_length=1)
+    goal: str = Field(..., min_length=1)
+    synopsis: str = Field(..., min_length=1)
+    first_role: str = Field(..., min_length=1)
+    second_role: str = Field(..., min_length=1)
+
+
+class CaseEditRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = Field(None, min_length=1)
+    time_limit: int | None = Field(None, gt=0)
+    preparations: str | None = None
+    system_prompt: str | None = Field(None, min_length=1)
+    goal: str | None = Field(None, min_length=1)
+    synopsis: str | None = Field(None, min_length=1)
+    first_role: str | None = Field(None, min_length=1)
+    second_role: str | None = Field(None, min_length=1)
 
 
 class ChatResponse(BaseModel):
@@ -78,7 +124,11 @@ class ChatListItem(BaseModel):
     name: str
 
 
-class ChatWithMessagesResponse(ChatResponse):
+class ChatWithCaseResponse(ChatResponse):
+    case: CaseResponse
+
+
+class ChatWithMessagesResponse(ChatWithCaseResponse):
     messages: list[MessageResponse]
 
 
@@ -112,4 +162,10 @@ __all__ = [
     "ChatActivateRequest",
     "MessageResponse",
     "MessageCreateRequest",
+    "CaseResponse",
+    "AdminCaseResponse",
+    "CaseCreateRequest",
+    "CaseEditRequest",
+    "ChatWithCaseResponse",
+    "AdminRegisterRequest",
 ]

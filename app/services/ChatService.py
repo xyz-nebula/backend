@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import Depends
 
@@ -15,10 +16,11 @@ from app.database.actions import (
     get_messages_by_chat,
     get_user_by_uuid,
 )
-from app.database.models import Chat, Message, User
+from app.database.models import Case, Chat, Message, User
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
+from app.services.CaseService import CaseService, get_case_service
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +28,14 @@ _ACTIVE_CHAT_KEY_PREFIX = "active_chat:"
 
 
 class ChatService:
-    def __init__(self, token_repository: BaseRepository):
+    def __init__(self, token_repository: BaseRepository, case_service: CaseService):
         self._active_chats = token_repository
+        self._case_service = case_service
 
-    async def create_chat(self, user_uuid: str, name: str) -> Chat:
+    async def create_chat(self, user_uuid: str, name: str, case_uuid: UUID) -> Chat:
         user = await self._require_user(user_uuid)
-        chat = await create_chat(user=user, name=name)
+        case = await self._require_case(case_uuid)
+        chat = await create_chat(user=user, case=case, name=name)
         logger.info("Chat created chat_id=%s user_id=%s", chat.uuid, user_uuid)
         return chat
 
@@ -40,6 +44,7 @@ class ChatService:
 
     async def get_chat(self, user_uuid: str, chat_uuid: str) -> tuple[Chat, list[Message]]:
         chat = await self._require_chat(user_uuid, chat_uuid)
+        await chat.fetch_related("case")
         messages = await get_messages_by_chat(chat)
         logger.debug("Chat retrieved chat_id=%s messages=%d", chat_uuid, len(messages))
         return chat, messages
@@ -59,7 +64,9 @@ class ChatService:
         if chat_uuid is None:
             logger.debug("No active chat found user_id=%s", user_uuid)
             raise ApiException(404, "no_active_chat", "No active chat is set")
-        return await self._require_chat(user_uuid, chat_uuid)
+        chat = await self._require_chat(user_uuid, chat_uuid)
+        await chat.fetch_related("case")
+        return chat
 
     async def post_message(self, user_uuid: str, chat_uuid: str, text: str, is_ai: bool) -> Message:
         chat = await self._require_chat(user_uuid, chat_uuid)
@@ -96,6 +103,9 @@ class ChatService:
             raise ApiException(401, "invalid_token", "User no longer exists")
         return user
 
+    async def _require_case(self, case_uuid: UUID) -> Case:
+        return await self._case_service.get_case(case_uuid)
+
     async def _require_chat(self, user_uuid: str, chat_uuid: str) -> Chat:
         chat = await get_chat_by_uuid_for_user(chat_uuid, user_uuid)
         if chat is None:
@@ -105,8 +115,9 @@ class ChatService:
 
 def get_chat_service(
     token_repository: BaseRepository = Depends(get_token_repository),
+    case_service: CaseService = Depends(get_case_service),
 ) -> ChatService:
-    return ChatService(token_repository=token_repository)
+    return ChatService(token_repository=token_repository, case_service=case_service)
 
 
 __all__ = ["ChatService", "get_chat_service"]
