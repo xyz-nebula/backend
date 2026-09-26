@@ -103,6 +103,7 @@ class CaseCreateRequest(BaseModel):
 class CaseEditRequest(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = Field(None, min_length=1)
+    difficulty: CaseDifficulty 
     time_limit: int | None = Field(None, gt=0)
     preparations: str | None = None
     system_prompt: str | None = Field(None, min_length=1)

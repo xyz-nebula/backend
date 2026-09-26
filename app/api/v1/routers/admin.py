@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
+from app.exceptions import ApiException
 from app.api.v1.routers.models import (
     AdminCaseResponse,
     AdminRegisterRequest,
@@ -70,6 +71,17 @@ async def edit_case(
 ) -> AdminCaseResponse:
     case = await admin_service.edit_case(case_uuid, **body.model_dump())
     return AdminCaseResponse.model_validate(case, from_attributes=True)
+
+
+@case_router.delete("/{case_uuid}}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_case(
+    case_uuid: UUID, 
+    admin_service: AdminService = Depends(get_admin_service)
+):
+    response = await admin_service.delete_case(case_uuid)
+    if not response:
+        raise ApiException(404, "not found", "Case not found")
+    return {"message": "Case deleted successfully"}
 
 
 router = APIRouter()
