@@ -12,6 +12,7 @@ from app.api.v1.routers.models import (
     MessageResponse,
 )
 from app.dependencies import get_current_token_payload
+from app.services.CaseService import CaseService, get_case_service
 from app.services.ChatService import ChatService, get_chat_service
 from app.services.JWTService import TokenPayload
 
@@ -35,6 +36,14 @@ async def create_chat(
     return ChatResponse(
         uuid=chat.uuid, name=chat.name, status=chat.status, created_at=chat.created_at
     )
+
+
+@chat_router.get("/cases", response_model=list[CaseResponse])
+async def get_cases(
+    case_service: CaseService = Depends(get_case_service),
+) -> list[CaseResponse]:
+    cases = await case_service.list_cases()
+    return [CaseResponse.model_validate(case, from_attributes=True) for case in cases]
 
 
 @chat_router.get("/active", response_model=ChatWithCaseResponse)
