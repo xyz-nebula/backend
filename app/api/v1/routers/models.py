@@ -66,9 +66,20 @@ class MessageResponse(BaseModel):
     created_at: datetime
 
 
+class CaseResponse(BaseModel):
+    uuid: UUID
+    created_at: datetime
+    name: str
+    description: str
+    category: str
+    difficulty: str
+    time_limit: int
+    preparations: str
+
 class ChatResponse(BaseModel):
     uuid: UUID
     name: str
+    case: CaseResponse
     status: ChatStatus
     created_at: datetime
 
@@ -112,4 +123,5 @@ __all__ = [
     "ChatActivateRequest",
     "MessageResponse",
     "MessageCreateRequest",
+    "CaseResponse",
 ]
