@@ -62,6 +62,27 @@ just reset-db
 just build-docker
 ```
 
+## Database migrations
+
+Schema changes are managed with **Aerich** (Tortoise's migration tool), configured via
+`[tool.aerich]` in `pyproject.toml` and `app/config/tortoise.py` (the `TORTOISE_ORM`
+dict Aerich's CLI reads — separate from the `register_tortoise(...)` call in
+`app/app.py`, which only wires FastAPI's lifespan and intentionally excludes
+`aerich.models`). Migration files live under `migrations/models/`.
+
+```bash
+just db-migrate name="add-foo-column"   # generate a migration from model changes
+just db-upgrade                          # apply pending migrations
+just db-downgrade                        # roll back the last migration
+```
+
+`aerich upgrade` runs automatically before the app starts, both in
+`docker-compose.dev.yml` (`just run-dev`) and in the production `Dockerfile`'s `CMD` —
+no manual migration step is needed when running either. `register_tortoise`'s
+`generate_schemas=True` is left on; it's `CREATE TABLE IF NOT EXISTS`-only so it's a
+no-op once Aerich has created the tables, and it's what bootstraps the SQLite DB in
+tests (which don't run Aerich).
+
 ## Valkey (local dev)
 
 Spin up a local Valkey instance with Docker:
