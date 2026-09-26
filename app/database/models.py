@@ -51,6 +51,7 @@ class Chat(Model):
 
     name = fields.CharField(max_length=100)
     user = fields.ForeignKeyField("models.User", related_name="chats")
+    case = fields.ForeignKeyField("models.Case", related_name="chats")
     status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
 
     class Meta:
@@ -64,14 +65,7 @@ class Case(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
     created_at = fields.DatetimeField(auto_now_add=True)
-
     name = fields.CharField(max_length=100)
-    participants = participants = fields.ManyToManyField(
-        "models.User", 
-        related_name="cases", 
-        through="case_participant"
-    )
-
     description = fields.TextField()
     category = fields.CharField(max_length=100)
     difficulty = fields.CharField(max_length=100)
