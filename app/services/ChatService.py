@@ -2,7 +2,6 @@ import logging
 from uuid import UUID
 
 from fastapi import Depends
-from tortoise.exceptions import DoesNotExist
 
 from app.database.actions import (
     create_chat,
@@ -11,7 +10,6 @@ from app.database.actions import (
     create_message,
     delete_chat,
     delete_message,
-    get_case,
     get_chat_by_uuid_for_user,
     get_chats_by_user,
     get_message_by_uuid_for_chat,
@@ -22,6 +20,7 @@ from app.database.models import Case, Chat, Message, User
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
+from app.services.CaseService import CaseService, get_case_service
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,9 @@ _ACTIVE_CHAT_KEY_PREFIX = "active_chat:"
 
 
 class ChatService:
-    def __init__(self, token_repository: BaseRepository):
+    def __init__(self, token_repository: BaseRepository, case_service: CaseService):
         self._active_chats = token_repository
+        self._case_service = case_service
 
     async def create_chat(self, user_uuid: str, name: str, case_uuid: UUID) -> Chat:
         user = await self._require_user(user_uuid)
@@ -104,10 +104,7 @@ class ChatService:
         return user
 
     async def _require_case(self, case_uuid: UUID) -> Case:
-        try:
-            return await get_case(case_uuid)
-        except DoesNotExist:
-            raise ApiException(404, "case_not_found", "Case not found") from None
+        return await self._case_service.get_case(case_uuid)
 
     async def _require_chat(self, user_uuid: str, chat_uuid: str) -> Chat:
         chat = await get_chat_by_uuid_for_user(chat_uuid, user_uuid)
@@ -118,8 +115,9 @@ class ChatService:
 
 def get_chat_service(
     token_repository: BaseRepository = Depends(get_token_repository),
+    case_service: CaseService = Depends(get_case_service),
 ) -> ChatService:
-    return ChatService(token_repository=token_repository)
+    return ChatService(token_repository=token_repository, case_service=case_service)
 
 
 __all__ = ["ChatService", "get_chat_service"]
