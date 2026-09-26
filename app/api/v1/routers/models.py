@@ -79,7 +79,6 @@ class CaseResponse(BaseModel):
 class ChatResponse(BaseModel):
     uuid: UUID
     name: str
-    case: CaseResponse
     status: ChatStatus
     created_at: datetime
 
@@ -91,6 +90,9 @@ class ChatListItem(BaseModel):
 
 class ChatWithMessagesResponse(ChatResponse):
     messages: list[MessageResponse]
+
+class ChatWithCaseResponse(ChatResponse):
+    case: CaseResponse
 
 
 class ChatActivateRequest(BaseModel):
