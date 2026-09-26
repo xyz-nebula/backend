@@ -18,7 +18,6 @@ case_router = APIRouter(
 async def get_admins():...
 
 
-
 @admin_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
 async def set_admin(
     body: AdminRegisterRequest,
@@ -33,6 +32,14 @@ async def set_admin(
     _ = await admin_service.set_user_admin(user, code=body.code)
 
     return {"message": "User role set to admin successfully"}
+
+
+@case_router.get("/")
+async def get_cases():...
+
+
+@case_router.post("/")
+async def create_case():...
 
 
 router = APIRouter()

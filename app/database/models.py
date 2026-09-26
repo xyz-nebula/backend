@@ -16,6 +16,13 @@ class UserRole(StrEnum):
     ADMIN = "admin"
 
 
+class CaseDifficulty(StrEnum):
+    EASY = "easy"
+    MODERATE = "moderate"
+    HARD = "hard"
+    INSANE = "insane"
+
+
 class User(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
@@ -144,4 +151,4 @@ class Message(Model):
         return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
 
 
-__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case"]
+__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case", "CaseDifficulty"]
