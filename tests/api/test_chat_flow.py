@@ -41,7 +41,13 @@ async def test_list_available_cases(client: TestClient, fake_mailer, case_uuid: 
 
     response = client.get("/v1/chats/cases", headers=auth_headers(tokens))
     assert response.status_code == 200, response.text
-    assert [c["uuid"] for c in response.json()] == [str(case_uuid)]
+    cases = response.json()
+    assert [c["uuid"] for c in cases] == [str(case_uuid)]
+    assert cases[0]["goal"] == "Reach the goal"
+    assert cases[0]["synopsis"] == "A short synopsis"
+    assert cases[0]["first_role"] == "Detective"
+    assert cases[0]["second_role"] == "Suspect"
+    assert "system_prompt" not in cases[0]
 
 
 async def test_list_available_cases_requires_auth(client: TestClient):
@@ -128,6 +134,8 @@ async def test_get_chat_assembles_messages_in_sequence(
     assert body["messages"][1]["is_ai"] is True
     assert body["case"]["uuid"] == str(case_uuid)
     assert body["case"]["name"] == "Test case"
+    assert body["case"]["goal"] == "Reach the goal"
+    assert "system_prompt" not in body["case"]
 
 
 async def test_get_chat_not_found(client: TestClient, fake_mailer):
