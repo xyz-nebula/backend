@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.api.v1.routers.models import (
     CaseResponse,
@@ -8,12 +8,17 @@ from app.api.v1.routers.models import (
     ChatResponse,
     ChatWithCaseResponse,
     ChatWithMessagesResponse,
+    EvaluateTriggerResponse,
+    EvaluationResultResponse,
     MessageCreateRequest,
     MessageResponse,
 )
+from app.database.actions.evaluation import get_evaluation_job_by_chat_uuid
 from app.dependencies import get_current_token_payload
+from app.exceptions import ApiException
 from app.services.CaseService import CaseService, get_case_service
 from app.services.ChatService import ChatService, get_chat_service
+from app.services.EvaluationService import EvaluationService, get_evaluation_service
 from app.services.JWTService import TokenPayload
 
 chat_router = APIRouter(
@@ -170,6 +175,35 @@ async def delete_message(
     chat_service: ChatService = Depends(get_chat_service),
 ) -> None:
     await chat_service.delete_message(payload.sub, chat_uuid, message_uuid)
+
+
+@chat_router.post(
+    "/{chat_uuid}/evaluate",
+    response_model=EvaluateTriggerResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def trigger_evaluate(
+    chat_uuid: str,
+    background_tasks: BackgroundTasks,
+    payload: TokenPayload = Depends(get_current_token_payload),
+    evaluation_service: EvaluationService = Depends(get_evaluation_service),
+) -> EvaluateTriggerResponse:
+    job = await evaluation_service.trigger(payload.sub, chat_uuid)
+    background_tasks.add_task(evaluation_service.run, job.uuid)
+    return EvaluateTriggerResponse(job_uuid=job.uuid, status=job.status)
+
+
+@chat_router.get("/{chat_uuid}/result", response_model=EvaluationResultResponse)
+async def get_evaluation_result(
+    chat_uuid: str,
+    payload: TokenPayload = Depends(get_current_token_payload),
+    chat_service: ChatService = Depends(get_chat_service),
+) -> EvaluationResultResponse:
+    await chat_service._require_chat(payload.sub, chat_uuid)
+    job = await get_evaluation_job_by_chat_uuid(chat_uuid)
+    if job is None:
+        raise ApiException(404, "evaluation_not_found", "No evaluation found for this chat")
+    return EvaluationResultResponse(status=job.status, result=job.result, error=job.error)
 
 
 router = APIRouter()

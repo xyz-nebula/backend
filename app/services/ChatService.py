@@ -16,7 +16,7 @@ from app.database.actions import (
     get_messages_by_chat,
     get_user_by_uuid,
 )
-from app.database.models import Case, Chat, Message, SelectedRole, User
+from app.database.models import Case, Chat, ChatStatus, Message, SelectedRole, User
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
@@ -72,6 +72,8 @@ class ChatService:
 
     async def post_message(self, user_uuid: str, chat_uuid: str, text: str, is_ai: bool) -> Message:
         chat = await self._require_chat(user_uuid, chat_uuid)
+        if chat.status != ChatStatus.ONGOING:
+            raise ApiException(409, "chat_not_ongoing", "Chat is not accepting new messages")
         message = await create_message(chat=chat, text=text, is_ai=is_ai)
         logger.debug(
             "Message posted chat_id=%s message_id=%s is_ai=%s", chat_uuid, message.uuid, is_ai

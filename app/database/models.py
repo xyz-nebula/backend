@@ -49,6 +49,8 @@ class ChatStatus(StrEnum):
     VICTORY = "victory"
     DEFEAT = "defeat"
     ONGOING = "ongoing"
+    EVALUATING = "evaluating"
+    EVALUATED = "evaluated"
 
 
 class SelectedRole(IntEnum):
@@ -147,6 +149,29 @@ class Judgement(Model):
         return f"Judgement({self.uuid}, {self.text[:20]}...)"
 
 
+class EvaluationJobStatus(StrEnum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    DONE = "done"
+    FAILED = "failed"
+
+
+class EvaluationJob(Model):
+    id = fields.IntField(pk=True)
+    uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    chat = fields.ForeignKeyField("models.Chat", related_name="evaluation_jobs", unique=True)
+    status = fields.CharEnumField(EvaluationJobStatus, default=EvaluationJobStatus.PENDING)
+    result = fields.JSONField(null=True)
+    error = fields.TextField(null=True)
+
+    class Meta:
+        table = "evaluation_job"
+
+    def __str__(self) -> str:
+        return f"EvaluationJob({self.uuid}, {self.status})"
+
+
 class Message(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
@@ -173,4 +198,6 @@ __all__ = [
     "Message",
     "Case",
     "CaseDifficulty",
+    "EvaluationJob",
+    "EvaluationJobStatus",
 ]
