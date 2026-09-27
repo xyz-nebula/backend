@@ -155,6 +155,7 @@ class MessageCreateRequest(BaseModel):
 
 # ── Arena AI evaluation result schema (contract 2.0.0-rc.1) ──────────────────
 
+
 class AIEvidence(BaseModel):
     message_index: int
     is_ai: bool
