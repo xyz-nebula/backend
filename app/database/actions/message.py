@@ -1,15 +1,20 @@
 import logging
 from uuid import UUID
 
+from tortoise.transactions import in_transaction
+
 from app.database.models import Chat, Message
 
 logger = logging.getLogger(__name__)
 
 
 async def create_message(*, chat: Chat, text: str, is_ai: bool) -> Message:
-    last_message = await Message.filter(chat=chat).order_by("-sequence").first()
-    sequence = last_message.sequence + 1 if last_message else 1
-    message = await Message.create(chat=chat, text=text, is_ai=is_ai, sequence=sequence)
+    async with in_transaction():
+        last_message = (
+            await Message.select_for_update().filter(chat=chat).order_by("-sequence").first()
+        )
+        sequence = last_message.sequence + 1 if last_message else 1
+        message = await Message.create(chat=chat, text=text, is_ai=is_ai, sequence=sequence)
     logger.info(
         "Message created message_id=%s chat_id=%s sequence=%d is_ai=%s",
         message.uuid,

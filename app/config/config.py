@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     activation_code_expire_minutes: int = 60
     activation_link_base_url: str = "http://example.com/activate?code={code}"
 
+    ai_base_url: str = "http://localhost:8000"
+    ai_service_token: str = ""
+    ai_contract_version: str = "2.0.0-rc.1"
+    ai_timeout_seconds: int = 330
+
     mailer_type: MailerType = MailerType.LOG
     smtp_host: str | None = None
     smtp_port: int = 587

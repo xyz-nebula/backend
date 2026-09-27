@@ -3,7 +3,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.database.models import CaseDifficulty, ChatStatus, SelectedRole, UserStatus
+from app.database.models import (
+    CaseDifficulty,
+    ChatStatus,
+    EvaluationJobStatus,
+    SelectedRole,
+    UserStatus,
+)
 
 
 class AuthRegisterRequest(BaseModel):
@@ -146,6 +152,17 @@ class MessageCreateRequest(BaseModel):
     is_ai: bool = False
 
 
+class EvaluateTriggerResponse(BaseModel):
+    job_uuid: UUID
+    status: EvaluationJobStatus
+
+
+class EvaluationResultResponse(BaseModel):
+    status: EvaluationJobStatus
+    result: dict | None
+    error: str | None
+
+
 class AdminRegisterRequest(BaseModel):
     code: str = Field(...)
 
@@ -172,4 +189,6 @@ __all__ = [
     "CaseEditRequest",
     "ChatWithCaseResponse",
     "AdminRegisterRequest",
+    "EvaluateTriggerResponse",
+    "EvaluationResultResponse",
 ]

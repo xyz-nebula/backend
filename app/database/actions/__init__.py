@@ -14,6 +14,12 @@ from app.database.actions.chat import (
     get_chat_by_uuid_for_user,
     get_chats_by_user,
 )
+from app.database.actions.evaluation import (
+    create_evaluation_job,
+    get_evaluation_job_by_chat_uuid,
+    get_evaluation_job_by_uuid,
+    update_evaluation_job,
+)
 from app.database.actions.message import (
     create_message,
     delete_message,
@@ -38,6 +44,10 @@ from app.database.actions.user import (
 )
 
 __all__ = [
+    "create_evaluation_job",
+    "get_evaluation_job_by_chat_uuid",
+    "get_evaluation_job_by_uuid",
+    "update_evaluation_job",
     "get_user_by_email",
     "require_user_by_email",
     "get_user_by_uuid",
