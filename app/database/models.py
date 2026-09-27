@@ -66,7 +66,7 @@ class Chat(Model):
     case = fields.ForeignKeyField("models.Case", related_name="chats")
     status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
     preparations = fields.TextField(default="")
-    selected_role = fields.IntEnumField(SelectedRole)
+    selected_role = fields.IntEnumField(SelectedRole, default=SelectedRole.FIRST)
 
     class Meta:
         table = "chat"
