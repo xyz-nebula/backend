@@ -38,7 +38,7 @@ async def create_chat(
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
     chat = await chat_service.create_chat(
-        payload.sub, body.name, body.case_uuid, body.selected_role
+        payload.sub, body.name, body.case_uuid, body.selected_role, body.preparations
     )
     return ChatResponse(
         uuid=chat.uuid,

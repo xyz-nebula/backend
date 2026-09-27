@@ -68,12 +68,10 @@ class AIClient:
         await self._client.aclose()
 
 
-def get_ai_client(settings: Settings | None = None) -> AIClient:
-    if settings is None:
-        from app.config.config import settings as _settings
+def get_ai_client() -> AIClient:
+    from app.config.config import settings as _settings
 
-        settings = _settings
-    return AIClient(settings)
+    return AIClient(_settings)
 
 
 __all__ = ["AIClient", "AIClientError", "get_ai_client"]

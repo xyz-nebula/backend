@@ -64,6 +64,7 @@ class ChatCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     case_uuid: UUID
     selected_role: SelectedRole
+    preparations: str = Field(default="", max_length=10000)
 
 
 class MessageResponse(BaseModel):
@@ -152,6 +153,106 @@ class MessageCreateRequest(BaseModel):
     is_ai: bool = False
 
 
+# ── Arena AI evaluation result schema (contract 2.0.0-rc.1) ──────────────────
+
+
+class AIEvidence(BaseModel):
+    message_index: int
+    is_ai: bool
+    quote: str
+
+
+class AIOutcomeAssessment(BaseModel):
+    kind: str  # agreement | partial_agreement | deferred | no_agreement | not_assessable
+    summary: str
+    agreed_terms: list[str]
+    open_points: list[str]
+    next_step: str | None
+    evidence: list[AIEvidence]
+
+
+class AIOutcome(BaseModel):
+    basis: str
+    status: str  # ready | failed
+    assessment: AIOutcomeAssessment | None
+    error_code: str | None
+
+
+class AIVerdict(BaseModel):
+    college: str
+    choice: str  # player | opponent
+    decisive_criterion: str
+    evidence: list[AIEvidence]
+    observation: str
+    effect: str
+    comparison: str
+
+
+class AIJudgeSlot(BaseModel):
+    college: str
+    status: str  # ready | failed
+    verdict: AIVerdict | None
+    error_code: str | None
+
+
+class AIJudgeVerdicts(BaseModel):
+    hiring: AIJudgeSlot
+    negotiation: AIJudgeSlot
+    ownership: AIJudgeSlot
+
+
+class AICoachingPoint(BaseModel):
+    evidence: AIEvidence
+    action: str
+    situation_change: str
+    consequence: str
+
+
+class AIPlanItem(BaseModel):
+    preparation_text: str
+    status: str  # followed | adapted | not_observed
+    evidence: AIEvidence | None
+    observation: str
+
+
+class AIPlanVsReality(BaseModel):
+    summary: str
+    items: list[AIPlanItem]
+
+
+class AIGoalAssessment(BaseModel):
+    status: str  # achieved | partially_achieved | not_achieved | not_assessable
+    goal_text: str | None
+    explanation: str
+    evidence: list[AIEvidence]
+
+
+class AITrainerFeedbackContent(BaseModel):
+    summary: str
+    strengths: list[AICoachingPoint]
+    mistakes: list[AICoachingPoint]
+    missed_opportunities: list[AICoachingPoint]
+    next_try: list[str]
+    plan_vs_reality: AIPlanVsReality | None
+    goal_assessment: AIGoalAssessment
+
+
+class AITrainerFeedback(BaseModel):
+    status: str  # ready | failed
+    feedback: AITrainerFeedbackContent | None
+    error_code: str | None
+
+
+class AIEvaluationResult(BaseModel):
+    contract_version: str
+    outcome: AIOutcome
+    judge_verdicts: AIJudgeVerdicts
+    trainer_feedback: AITrainerFeedback
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 class EvaluateTriggerResponse(BaseModel):
     job_uuid: UUID
     status: EvaluationJobStatus
@@ -159,7 +260,7 @@ class EvaluateTriggerResponse(BaseModel):
 
 class EvaluationResultResponse(BaseModel):
     status: EvaluationJobStatus
-    result: dict | None
+    result: AIEvaluationResult | None
     error: str | None
 
 
@@ -191,4 +292,10 @@ __all__ = [
     "AdminRegisterRequest",
     "EvaluateTriggerResponse",
     "EvaluationResultResponse",
+    "AIEvaluationResult",
+    "AIOutcome",
+    "AIJudgeVerdicts",
+    "AIJudgeSlot",
+    "AITrainerFeedback",
+    "AIEvidence",
 ]
