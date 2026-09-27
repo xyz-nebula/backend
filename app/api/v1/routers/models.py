@@ -81,9 +81,6 @@ class CaseResponse(BaseModel):
     second_role: str
     first_role_preparations: str
     second_role_preparations: str
-
-
-class AdminCaseResponse(CaseResponse):
     system_prompt: str
 
 
@@ -168,7 +165,6 @@ __all__ = [
     "MessageResponse",
     "MessageCreateRequest",
     "CaseResponse",
-    "AdminCaseResponse",
     "CaseCreateRequest",
     "CaseEditRequest",
     "ChatWithCaseResponse",

@@ -50,7 +50,7 @@ async def test_list_available_cases(client: TestClient, fake_mailer, case_uuid: 
     assert cases[0]["second_role"] == "Suspect"
     assert cases[0]["first_role_preparations"] == "Review the evidence"
     assert cases[0]["second_role_preparations"] == "Prepare an alibi"
-    assert "system_prompt" not in cases[0]
+    assert cases[0]["system_prompt"] == "You are a test persona"
 
 
 async def test_list_available_cases_requires_auth(client: TestClient):
@@ -138,7 +138,7 @@ async def test_get_chat_assembles_messages_in_sequence(
     assert body["case"]["uuid"] == str(case_uuid)
     assert body["case"]["name"] == "Test case"
     assert body["case"]["goal"] == "Reach the goal"
-    assert "system_prompt" not in body["case"]
+    assert body["case"]["system_prompt"] == "You are a test persona"
 
 
 async def test_get_chat_not_found(client: TestClient, fake_mailer):

@@ -3,10 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.routers.models import (
-    AdminCaseResponse,
     AdminRegisterRequest,
     CaseCreateRequest,
     CaseEditRequest,
+    CaseResponse,
 )
 from app.dependencies import TokenPayload, get_current_admin, get_current_token_payload
 from app.exceptions import ApiException
@@ -46,31 +46,31 @@ async def set_admin(
 async def get_admins(): ...
 
 
-@case_router.get("/", response_model=list[AdminCaseResponse])
+@case_router.get("/", response_model=list[CaseResponse])
 async def get_cases(
     admin_service: AdminService = Depends(get_admin_service),
-) -> list[AdminCaseResponse]:
+) -> list[CaseResponse]:
     cases = await admin_service.list_cases()
-    return [AdminCaseResponse.model_validate(case, from_attributes=True) for case in cases]
+    return [CaseResponse.model_validate(case, from_attributes=True) for case in cases]
 
 
-@case_router.post("/", response_model=AdminCaseResponse)
+@case_router.post("/", response_model=CaseResponse)
 async def create_case(
     body: CaseCreateRequest,
     admin_service: AdminService = Depends(get_admin_service),
-) -> AdminCaseResponse:
+) -> CaseResponse:
     case = await admin_service.create_case(**body.model_dump())
-    return AdminCaseResponse.model_validate(case, from_attributes=True)
+    return CaseResponse.model_validate(case, from_attributes=True)
 
 
-@case_router.patch("/{case_uuid}", response_model=AdminCaseResponse)
+@case_router.patch("/{case_uuid}", response_model=CaseResponse)
 async def edit_case(
     case_uuid: UUID,
     body: CaseEditRequest,
     admin_service: AdminService = Depends(get_admin_service),
-) -> AdminCaseResponse:
+) -> CaseResponse:
     case = await admin_service.edit_case(case_uuid, **body.model_dump())
-    return AdminCaseResponse.model_validate(case, from_attributes=True)
+    return CaseResponse.model_validate(case, from_attributes=True)
 
 
 @case_router.delete("/{case_uuid}", status_code=status.HTTP_204_NO_CONTENT)
