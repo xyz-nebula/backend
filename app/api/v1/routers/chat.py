@@ -32,12 +32,15 @@ async def create_chat(
     payload: TokenPayload = Depends(get_current_token_payload),
     chat_service: ChatService = Depends(get_chat_service),
 ) -> ChatResponse:
-    chat = await chat_service.create_chat(payload.sub, body.name, body.case_uuid)
+    chat = await chat_service.create_chat(
+        payload.sub, body.name, body.case_uuid, body.selected_role
+    )
     return ChatResponse(
         uuid=chat.uuid,
         name=chat.name,
         status=chat.status,
         preparations=chat.preparations,
+        selected_role=chat.selected_role,
         created_at=chat.created_at,
     )
 
@@ -61,6 +64,7 @@ async def get_active_chat(
         name=chat.name,
         status=chat.status,
         preparations=chat.preparations,
+        selected_role=chat.selected_role,
         created_at=chat.created_at,
         case=CaseResponse.model_validate(chat.case, from_attributes=True),
     )
@@ -87,6 +91,7 @@ async def get_chat(
         name=chat.name,
         status=chat.status,
         preparations=chat.preparations,
+        selected_role=chat.selected_role,
         created_at=chat.created_at,
         case=CaseResponse.model_validate(chat.case, from_attributes=True),
         messages=[
@@ -108,7 +113,10 @@ async def get_chats(
     chat_service: ChatService = Depends(get_chat_service),
 ) -> list[ChatListItem]:
     chats = await chat_service.get_chats(payload.sub)
-    return [ChatListItem(uuid=chat.uuid, name=chat.name) for chat in chats]
+    return [
+        ChatListItem(uuid=chat.uuid, name=chat.name, selected_role=chat.selected_role)
+        for chat in chats
+    ]
 
 
 @chat_router.delete("/{chat_uuid}", status_code=status.HTTP_204_NO_CONTENT)

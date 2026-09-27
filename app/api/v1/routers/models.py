@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.database.models import CaseDifficulty, ChatStatus, UserStatus
+from app.database.models import CaseDifficulty, ChatStatus, SelectedRole, UserStatus
 
 
 class AuthRegisterRequest(BaseModel):
@@ -57,6 +57,7 @@ class TotpDisableRequest(BaseModel):
 class ChatCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     case_uuid: UUID
+    selected_role: SelectedRole
 
 
 class MessageResponse(BaseModel):
@@ -118,12 +119,14 @@ class ChatResponse(BaseModel):
     name: str
     status: ChatStatus
     preparations: str
+    selected_role: SelectedRole
     created_at: datetime
 
 
 class ChatListItem(BaseModel):
     uuid: UUID
     name: str
+    selected_role: SelectedRole
 
 
 class ChatWithCaseResponse(ChatResponse):

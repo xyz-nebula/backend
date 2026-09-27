@@ -6,9 +6,17 @@ from tests.helpers import auth_headers
 from tests.helpers import register_and_activate as _register_and_activate
 
 
-def _create_chat(client: TestClient, case_uuid: UUID, headers: dict, name: str = "My chat") -> dict:
+def _create_chat(
+    client: TestClient,
+    case_uuid: UUID,
+    headers: dict,
+    name: str = "My chat",
+    selected_role: int = 0,
+) -> dict:
     response = client.post(
-        "/v1/chats/", json={"name": name, "case_uuid": str(case_uuid)}, headers=headers
+        "/v1/chats/",
+        json={"name": name, "case_uuid": str(case_uuid), "selected_role": selected_role},
+        headers=headers,
     )
     assert response.status_code == 200, response.text
     return response.json()
@@ -22,6 +30,7 @@ async def test_create_chat_success(client: TestClient, fake_mailer, case_uuid: U
     assert chat["name"] == "My chat"
     assert chat["status"] == "ongoing"
     assert chat["preparations"] == ""
+    assert chat["selected_role"] == 0
     assert chat["uuid"]
 
 
@@ -30,7 +39,7 @@ async def test_create_chat_unknown_case(client: TestClient, fake_mailer):
 
     response = client.post(
         "/v1/chats/",
-        json={"name": "My chat", "case_uuid": str(uuid4())},
+        json={"name": "My chat", "case_uuid": str(uuid4()), "selected_role": 0},
         headers=auth_headers(tokens),
     )
     assert response.status_code == 404

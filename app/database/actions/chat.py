@@ -1,13 +1,26 @@
 import logging
 from uuid import UUID
 
-from app.database.models import Case, Chat, Feedback, Judgement, User
+from app.database.models import Case, Chat, Feedback, Judgement, SelectedRole, User
 
 logger = logging.getLogger(__name__)
 
 
-async def create_chat(*, user: User, case: Case, name: str, preparations: str = "") -> Chat:
-    chat = await Chat.create(user=user, case=case, name=name, preparations=preparations)
+async def create_chat(
+    *,
+    user: User,
+    case: Case,
+    name: str,
+    selected_role: SelectedRole,
+    preparations: str = "",
+) -> Chat:
+    chat = await Chat.create(
+        user=user,
+        case=case,
+        name=name,
+        selected_role=selected_role,
+        preparations=preparations,
+    )
     logger.info(
         "Chat created chat_id=%s user_id=%s case_id=%s name=%s",
         chat.uuid,
