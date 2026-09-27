@@ -16,7 +16,7 @@ from app.database.actions import (
     get_messages_by_chat,
     get_user_by_uuid,
 )
-from app.database.models import Case, Chat, Message, User
+from app.database.models import Case, Chat, Message, SelectedRole, User
 from app.exceptions import ApiException
 from app.repository.base import BaseRepository
 from app.repository.factory import get_token_repository
@@ -32,10 +32,12 @@ class ChatService:
         self._active_chats = token_repository
         self._case_service = case_service
 
-    async def create_chat(self, user_uuid: str, name: str, case_uuid: UUID) -> Chat:
+    async def create_chat(
+        self, user_uuid: str, name: str, case_uuid: UUID, selected_role: SelectedRole
+    ) -> Chat:
         user = await self._require_user(user_uuid)
         case = await self._require_case(case_uuid)
-        chat = await create_chat(user=user, case=case, name=name)
+        chat = await create_chat(user=user, case=case, name=name, selected_role=selected_role)
         logger.info("Chat created chat_id=%s user_id=%s", chat.uuid, user_uuid)
         return chat
 

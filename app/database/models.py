@@ -1,5 +1,5 @@
 import uuid
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 from tortoise import fields
 from tortoise.models import Model
@@ -51,6 +51,11 @@ class ChatStatus(StrEnum):
     ONGOING = "ongoing"
 
 
+class SelectedRole(IntEnum):
+    FIRST = 0
+    SECOND = 1
+
+
 class Chat(Model):
     id = fields.IntField(pk=True)
     uuid = fields.UUIDField(unique=True, default=uuid.uuid4)
@@ -61,6 +66,7 @@ class Chat(Model):
     case = fields.ForeignKeyField("models.Case", related_name="chats")
     status = fields.CharEnumField(ChatStatus, default=ChatStatus.ONGOING)
     preparations = fields.TextField(default="")
+    selected_role = fields.IntEnumField(SelectedRole)
 
     class Meta:
         table = "chat"
@@ -158,4 +164,13 @@ class Message(Model):
         return f"Message({self.uuid}, {'AI' if self.is_ai else 'User'}: {self.text[:20]}...)"
 
 
-__all__ = ["User", "UserStatus", "Chat", "ChatStatus", "Message", "Case", "CaseDifficulty"]
+__all__ = [
+    "User",
+    "UserStatus",
+    "Chat",
+    "ChatStatus",
+    "SelectedRole",
+    "Message",
+    "Case",
+    "CaseDifficulty",
+]
