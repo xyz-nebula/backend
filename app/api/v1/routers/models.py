@@ -182,7 +182,7 @@ class AIVerdict(BaseModel):
     college: str
     choice: str  # player | opponent
     decisive_criterion: str
-    evidence: list[AIEvidence]
+    evidence: AIEvidence
     observation: str
     effect: str
     comparison: str
