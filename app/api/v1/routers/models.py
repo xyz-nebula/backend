@@ -195,12 +195,6 @@ class AIJudgeSlot(BaseModel):
     error_code: str | None
 
 
-class AIJudgeVerdicts(BaseModel):
-    hiring: AIJudgeSlot
-    negotiation: AIJudgeSlot
-    ownership: AIJudgeSlot
-
-
 class AICoachingPoint(BaseModel):
     evidence: AIEvidence
     action: str
@@ -246,7 +240,7 @@ class AITrainerFeedback(BaseModel):
 class AIEvaluationResult(BaseModel):
     contract_version: str
     outcome: AIOutcome
-    judge_verdicts: AIJudgeVerdicts
+    judge_verdicts: list[AIJudgeSlot]
     trainer_feedback: AITrainerFeedback
 
 
@@ -294,7 +288,6 @@ __all__ = [
     "EvaluationResultResponse",
     "AIEvaluationResult",
     "AIOutcome",
-    "AIJudgeVerdicts",
     "AIJudgeSlot",
     "AITrainerFeedback",
     "AIEvidence",
