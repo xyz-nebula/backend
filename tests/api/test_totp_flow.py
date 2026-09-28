@@ -20,13 +20,13 @@ async def test_enroll_returns_secret_and_otpauth_url(client: TestClient, fake_ma
     assert user.mfa_enabled is False
 
 
-async def test_enroll_without_bearer_token(client: TestClient, fake_mailer):
+async def test_enroll_without_bearer_token(client: TestClient):
     response = client.post("/v1/auth/totp/enroll")
     assert response.status_code == 401
     assert response.json()["code"] == "missing_token"
 
 
-async def test_enroll_with_garbage_token(client: TestClient, fake_mailer):
+async def test_enroll_with_garbage_token(client: TestClient):
     response = client.post(
         "/v1/auth/totp/enroll", headers={"Authorization": "Bearer not-a-real-token"}
     )

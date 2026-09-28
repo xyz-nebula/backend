@@ -1,9 +1,12 @@
+import logging
 from datetime import UTC, datetime, timedelta
 
 import jwt
 from pydantic import BaseModel
 
 from app.config.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class TokenPayload(BaseModel):
@@ -30,8 +33,10 @@ class JWTService:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except jwt.ExpiredSignatureError as exc:
+            logger.debug("JWT decode failed: token expired")
             raise ValueError("Token has expired") from exc
         except jwt.InvalidTokenError as exc:
+            logger.warning("JWT decode failed: invalid token")
             raise ValueError("Invalid token") from exc
         return TokenPayload(**payload)
 
