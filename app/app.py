@@ -19,6 +19,7 @@ app = FastAPI(
     title="Website Profile Backend",
     description="A backend service for managing website profiles and user authentication.",
     version="1.0.0",
+    root_path=settings.root_path,
 )
 
 register_tortoise(
